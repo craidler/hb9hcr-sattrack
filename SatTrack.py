@@ -1,12 +1,11 @@
 import sys, time
 import threading
 from datetime import datetime
+import gpiozero as GPIO
+from DRV8825 import DRV8825
 
-# import RPi.GPIO as GPIO
-# from RpiMotorLib import RpiMotorLib
-
-AZ_PINS = [20, 21, (14, 15, 18)]
-EL_PINS = [22, 23, (17, 27, 4)]
+AZ_PINS = (16, 17, 20)
+EL_PINS = (21, 22, 27)
 
 
 class Tracker:
@@ -23,13 +22,13 @@ class Tracker:
         self.az_d = (200 * 20 * 1) / 360  # step per deg
         self.az_s = 1  # step size
         self.az_t = 0
-        self.az_m = None  # RpiMotorLib.A4988Nema(AZ_PINS, AZ_PINS, AZ_PINS, "DRV8825")
+        self.az_m = DRV8825(13, 19, 12, AZ_PINS)
         self.el_1 = prompt('max elevation  [045°]:', lambda v: max(0, min(90, int(v)))) or 45
         self.el_c = self.elevation()
         self.el_d = (200 * 20 * 1) / 360  # step per deg
         self.el_s = 1  # step size
         self.el_t = 0
-        self.el_m = None  # RpiMotorLib.A4988Nema(EL_PINS, EL_PINS, EL_PINS, "DRV8825")
+        self.el_m = DRV8825(24, 18, 4, EL_PINS)
         self.t_c = None
         self.t_d = prompt('duration        [10s]:', lambda v: max(0, min(3600, int(v)))) or 10
         self.t_0 = prompt('start [Ymd HM, T-20s]:', lambda v: datetime.strptime(v, '%Y%m%d %H%M').timestamp()) or time.time() + 20
@@ -80,13 +79,15 @@ class Tracker:
 
         if self.STATE_TRACK == self.state:
             if self.t_c >= self.t_1:
-                sys.stdout.write('\r[%s] %03d°%s %03d°%s T-%03d LOS %s 100%%' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_1 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M')))
+                sys.stdout.write(
+                    '\r[%s] %03d°%s %03d°%s T-%03d LOS %s 100%%' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_1 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M')))
                 self.state = self.STATE_RESET
                 return True
 
             t = (self.t_c - self.t_0) / self.t_d
-            self.move(t)
-            sys.stdout.write('\r[%s] %03d°%s %03d°%s T-%03d LOS %s %03d%%' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_1 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M'), t * 100))
+            steps = self.move(t)
+            sys.stdout.write(
+                '\r[%s] %03d°%s %03d°%s T-%03d LOS %s %03d%% (%d/%d)' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_1 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M'), t * 100, steps.get('az'), steps.get('el')))
 
         if self.STATE_RESET == self.state:
             self.move(0)
@@ -102,20 +103,21 @@ class Tracker:
         delta = (self.az_1 - self.az_0 + 180) % 360 - 180
         self.az_t = (self.az_0 + (delta * t)) % 360
         self.el_t = 4 * self.el_1 * t * (1 - t)
+        steps = {'az': (self.az_t - self.az_c) * self.az_d, 'el': (self.el_t - self.el_c) * self.el_d}
 
         # azimuth
         if self.az_m:
-            steps = (self.az_t - self.az_c) * self.az_d
-            self.az_m.motor_go(steps > 0, self.az_s, abs(steps), .001, False, .01)
+            self.az_m.TurnStep('forward', abs(steps.get('az')), .001)
 
         # elevation
         if self.el_m:
-            steps = (self.el_t - self.el_c) * self.el_d
-            self.el_m.motor_go(steps > 0, self.el_s, abs(steps), .001, False, .01)
+            self.el_m.TurnStep('forward', abs(steps.get('el')), .001)
 
         # update
         self.az_c = self.az_t
         self.el_c = self.el_t
+
+        return steps
 
 
 def bearing(deg, m):

@@ -1,3 +1,4 @@
+import math
 import time
 
 from DRV8825 import DRV8825
@@ -20,7 +21,7 @@ class Motor:
         
         self.driver.Stop()
 
-    def ramp(self, steps, delay=.001, delay_max=.01):
+    def trapeziodal(self, steps, delay=.001, delay_max=.01):
         if 0 == steps:
             return
 
@@ -47,15 +48,38 @@ class Motor:
 
             self.driver.TurnStep(direction, 1, d)
 
-        self.driver.Stop()        
+        self.driver.Stop()  
+
+    def sinusoidal(self, steps, delay=.001, delay_max=0.01):
+        if 0 == steps:
+            return
+        
+        direction = 'forward'
+        steepness = 10
+
+        if (0 > steps):
+            direction = 'backward'
+            steps = abs(steps)
+        
+        for i in range(steps):
+            x = (i / steps) * 2 - 1
+            f = 1 / (1 + math.exp(-steepness * (x + .5))) * (1 / (1 + math.exp(steepness * (x - .5))))
+            d = delay_max - (f * (delay_max - delay))
+            self.driver.TurnStep(direction, 1, d)
+        
+        self.driver.Stop()
 
 
 if __name__ == '__main__':
     motor = Motor(13, 19, 12, (16, 17, 20), 'softward', '1/32step')
-    motor.linear(100)
+    motor.linear(400)
     time.sleep(.2)
-    motor.linear(-100)
+    motor.linear(-400)
     time.sleep(1)
-    motor.ramp(400)
+    motor.trapeziodal(400)
     time.sleep(.2)
-    motor.ramp(-400)
+    motor.trapeziodal(-400)
+    time.sleep(1)
+    motor.sinusoidal(400)
+    time.sleep(.2)
+    motor.sinusoidal(-400)

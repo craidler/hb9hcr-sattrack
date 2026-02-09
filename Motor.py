@@ -51,11 +51,11 @@ class Motor:
 
 
 if __name__ == '__main__':
-    motor = Motor(13, 19, 12, (16, 17, 20))
+    motor = Motor(13, 19, 12, (16, 17, 20), 'softward', '1/32step')
     motor.linear(100)
     time.sleep(.2)
     motor.linear(-100)
     time.sleep(1)
-    motor.ramp(50)
+    motor.ramp(400)
     time.sleep(.2)
-    motor.ramp(50)
+    motor.ramp(-400)

@@ -20,8 +20,12 @@ class Motor:
         
         self.driver.Stop()
 
-    def ramp(self, steps, delay_min=.001, delay_max=.01):
+    def ramp(self, steps, delay=.001, delay_max=.01):
         if 0 == steps:
+            return
+
+        if 100 > abs(steps):
+            self.linear(steps, delay)
             return
 
         direction = 'forward'
@@ -30,16 +34,16 @@ class Motor:
             direction = 'backward'
             steps = abs(steps)
         
-        steps_ramp = min(20, steps / 2)
+        steps_ramp = min(50, steps / 2)
 
         for i in range(steps):
             if i < steps_ramp:
-                d = delay_max - (i / steps_ramp) * (delay_max - delay_min)
+                d = delay_max - (i / steps_ramp) * (delay_max - delay)
             elif i >= (steps - steps_ramp):
                 c = i - (steps - steps_ramp)
-                d = delay_min + (c / steps_ramp) * (delay_max - delay_min)
+                d = delay + (c / steps_ramp) * (delay_max - delay)
             else:
-                d = delay_min
+                d = delay
 
             self.driver.TurnStep(direction, 1, d)
 
@@ -52,6 +56,6 @@ if __name__ == '__main__':
     time.sleep(.2)
     motor.linear(-100)
     time.sleep(1)
-    motor.ramp(100)
+    motor.ramp(50)
     time.sleep(.2)
-    motor.ramp(-100)
+    motor.ramp(50)

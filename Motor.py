@@ -2,7 +2,7 @@ import math, time
 import gpiozero as GPIO
 
 
-def _ease_in(i, steps, delay_start, delay_end):
+def _ease_in(i, steps, delay_end, delay_start):
     progress = i / (steps - 1) if steps > 1 else 1
     factor = math.cos(progress * (math.pi / 2))
     return delay_end + (delay_start - delay_end) * factor
@@ -77,10 +77,10 @@ class Motor:
             delay_end = delay * 20
 
             for i in range(steps):
-                if 25 >= i:
-                    d = _ease_in(i, 25, delay, delay_end)
-                elif 25 >= steps - i:
-                    d = _ease_out(steps - i, 25, delay, delay_end)
+                if 50 >= i:
+                    d = _ease_in(i, 50, delay, delay_end)
+                elif 50 >= steps - i:
+                    d = _ease_out(steps - i, 50, delay, delay_end)
                 else:
                     d = delay
 
@@ -152,4 +152,4 @@ if __name__ == '__main__':
     time.sleep(1)
     motor.angle(-90)
     time.sleep(1)
-    motor.angle(-270, .001, Motor.MOVE_EASE)
+    motor.angle(-270, .002, Motor.MOVE_EASE)

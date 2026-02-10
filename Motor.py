@@ -2,16 +2,10 @@ import math, time
 import gpiozero as GPIO
 
 
-def _ease_in(i, steps, delay_end, delay_start):
-    progress = i / (steps - 1) if steps > 1 else 1
-    factor = math.cos(progress * (math.pi / 2))
-    return delay_end + (delay_start - delay_end) * factor
-
-
-def _ease_out(i, steps, delay_start, delay_end):
-    progress = i / (steps - 1) if steps > 1 else 1
-    factor = 1 - math.sin(progress * (math.pi / 2))
-    return delay_end + (delay_start - delay_end) * factor
+def inertial_ease_in_out(i, total_i, max_delay, min_delay):
+    progress = i / (total_i - 1) if total_i > 1 else 0
+    factor = (math.cos(2 * math.pi * progress) + 1) / 2
+    return min_delay + (max_delay - min_delay) * factor
 
 
 class Motor:
@@ -77,13 +71,7 @@ class Motor:
             delay_end = delay * 20
 
             for i in range(steps):
-                if 50 >= i:
-                    d = _ease_in(i, 50, delay, delay_end)
-                elif 50 >= steps - i:
-                    d = _ease_out(steps - i, 50, delay, delay_end)
-                else:
-                    d = delay
-
+                d = inertial_ease_in_out(i, steps, delay_end, delay)
                 self.write(self.pin_step, True)
                 time.sleep(d)
                 self.write(self.pin_step, False)

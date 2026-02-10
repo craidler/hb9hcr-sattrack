@@ -1,159 +1,117 @@
-import sys, time
+import math, time
 import threading
-from datetime import datetime
+
 import gpiozero as GPIO
-from DRV8825 import DRV8825
-
-AZ_PINS = (16, 17, 20)
-EL_PINS = (21, 22, 27)
 
 
-class Tracker:
-    STATE_ARMED = 'ARMED'
-    STATE_RESET = 'RESET'
-    STATE_SETUP = 'SETUP'
-    STATE_TRACK = 'TRACK'
-    STATE_DONE = 'DONE'
+def get_stepper_delay(current_step, total_steps, max_speed, min_speed=1.0):
+    accel_limit = total_steps * .2
+    decel_start = total_steps * .8
 
-    def __init__(self):
-        self.az_0 = prompt('aos azimuth    [315°]:', lambda v: max(0, min(360, int(v)))) or 315
-        self.az_1 = prompt('los azimuth    [090°]:', lambda v: max(0, min(360, int(v)))) or 90
-        self.az_c = self.azimuth()
-        self.az_d = (200 * 20 * 1) / 360  # step per deg
-        self.az_s = 1  # step size
-        self.az_t = 0
-        self.az_m = DRV8825(13, 19, 12, AZ_PINS)
-        self.el_1 = prompt('max elevation  [045°]:', lambda v: max(0, min(90, int(v)))) or 45
-        self.el_c = self.elevation()
-        self.el_d = (200 * 20 * 1) / 360  # step per deg
-        self.el_s = 1  # step size
-        self.el_t = 0
-        self.el_m = DRV8825(24, 18, 4, EL_PINS)
-        self.t_c = None
-        self.t_d = prompt('duration        [10s]:', lambda v: max(0, min(3600, int(v)))) or 10
-        self.t_0 = prompt('start [Ymd HM, T-20s]:', lambda v: datetime.strptime(v, '%Y%m%d %H%M').timestamp()) or time.time() + 20
-        self.t_1 = self.t_0 + self.t_d
-        self.interval = .05
-        self.state = self.STATE_SETUP
-        self.imu = None  # IMU
+    if current_step < accel_limit:
+        phase = (current_step / accel_limit) * (math.pi / 2)
+        speed = max_speed * (math.sin(phase) ** 2)
+    elif current_step < decel_start:
+        speed = max_speed
+    else:
+        decel_progress = (current_step - decel_start) / accel_limit
+        phase = (math.pi / 2) + (decel_progress * (math.pi / 2))
+        speed = max_speed * (math.sin(phase) ** 2)
 
-    def azimuth(self):
-        return .0
-
-    def elevation(self):
-        return .0
-
-    def execute(self):
-        stop = threading.Event()
-
-        while not stop.is_set():
-            try:
-                self.t_c = time.time()
-                self.handle() or stop.set()
-                time.sleep(self.interval)
-
-            except KeyboardInterrupt:
-                stop.set()
-
-    def handle(self):
-        sys.stdout.flush()
-
-        if self.STATE_SETUP == self.state:
-            sys.stdout.write('\n')
-            for i in reversed(range(10)):
-                sys.stdout.write('\r[%s] %03d°%s %03d°%s T-%03d CLEAR DEVICE' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), i))
-                time.sleep(1)
-
-            self.move(0)
-            self.state = self.STATE_ARMED
-            sys.stdout.write('\n')
-            return True
-
-        if self.STATE_ARMED == self.state:
-            sys.stdout.write('\r[%s] %03d°%s %03d°%s T-%03d AOS %s' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_0 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M')))
-
-            if self.t_c >= self.t_0:
-                sys.stdout.write('\n')
-                self.state = self.STATE_TRACK
-                return True
-
-        if self.STATE_TRACK == self.state:
-            if self.t_c >= self.t_1:
-                sys.stdout.write(
-                    '\r[%s] %03d°%s %03d°%s T-%03d LOS %s 100%%' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_1 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M')))
-                self.state = self.STATE_RESET
-                return True
-
-            t = (self.t_c - self.t_0) / self.t_d
-            steps = self.move(t)
-            sys.stdout.write(
-                '\r[%s] %03d°%s %03d°%s T-%03d LOS %s %03d%% (%d/%d)' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 90), self.t_1 - self.t_c, datetime.fromtimestamp(self.t_0).strftime('%Y-%m-%d %H:%M'), t * 100, steps.get('az'), steps.get('el')))
-
-        if self.STATE_RESET == self.state:
-            self.move(0)
-            sys.stdout.write('\n[%s] %03d°%s %03d°%s' % (self.state, self.az_c, bearing(self.az_c, 360), self.el_c, bearing(self.el_c, 360)))
-            self.state = self.STATE_DONE
-            sys.stdout.write('\n')
-            return False
-
-        return True
-
-    def move(self, t):
-        # target
-        delta = (self.az_1 - self.az_0 + 180) % 360 - 180
-        self.az_t = (self.az_0 + (delta * t)) % 360
-        self.el_t = 4 * self.el_1 * t * (1 - t)
-        steps = {'az': (self.az_t - self.az_c) * self.az_d, 'el': (self.el_t - self.el_c) * self.el_d}
-
-        # azimuth
-        if self.az_m:
-            self.az_m.TurnStep('forward', abs(steps.get('az')), .001)
-
-        # elevation
-        if self.el_m:
-            self.el_m.TurnStep('forward', abs(steps.get('el')), .001)
-
-        # update
-        self.az_c = self.az_t
-        self.el_c = self.el_t
-
-        return steps
+    actual_speed = max(speed, min_speed)
+    return 1.0 / actual_speed
 
 
-def bearing(deg, m):
-    deg %= m
-    arrows = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖']
-    index = int((deg + 22.5) // 45) % 8
+class Motor:
+    MOVE_LINEAR = 'L'
+    MOVE_EASE = 'E'
 
-    if 90 == m:
-        index = 2 - index
+    def __init__(self, direction, step, enable, mode, size=1):
+        self.pin_direction = direction
+        self.pin_enable = enable
+        self.pin_step = step
+        self.pin_mode = mode
 
-    return arrows[index]
+        self.control = {
+            direction: GPIO.LED(direction),
+            enable: GPIO.LED(enable),
+            step: GPIO.LED(step),
+            mode[0]: GPIO.LED(mode[0]),
+            mode[1]: GPIO.LED(mode[1]),
+            mode[2]: GPIO.LED(mode[2]),
+        }
+
+        self.sizes = {
+            1: (0, 0, 0),
+            2: (1, 0, 0),
+            4: (0, 1, 0),
+            8: (1, 1, 0),
+            16: (0, 0, 1),
+            32: (1, 0, 1),
+        }
+
+        self.size = size
+
+        j = 0
+        for i in self.sizes[size]:
+            self.write(self.pin_mode[j], i)
+            j = j + 1
+
+    def angle(self, degree, delay=.001, profile=MOVE_LINEAR):
+        return self.step(degree / 1.8, delay, profile)
+
+    def step(self, steps, delay=.001, profile=MOVE_LINEAR):
+        steps = int(steps * self.size)
+
+        if 0 == steps:
+            return self
+
+        self.write(self.pin_direction, int(steps > 0))
+        self.write(self.pin_enable, True)
+
+        steps = abs(steps)
+
+        if self.MOVE_LINEAR == profile:
+            for i in range(steps):
+                self.write(self.pin_step, True)
+                time.sleep(delay)
+                self.write(self.pin_step, False)
+                time.sleep(.001)
+
+        if self.MOVE_EASE == profile:
+            for i in range(steps):
+                d = get_stepper_delay(i, steps, 2000, 200)
+                self.write(self.pin_step, True)
+                time.sleep(d)
+                self.write(self.pin_step, False)
+                time.sleep(.001)
+
+        self.write(self.pin_enable, False)
+        return self
+
+    def write(self, pin, value):
+        if value:
+            self.control[pin].on()
+            return self
+
+        self.control[pin].off()
+        return self
 
 
-def prompt(label, callback):
-    while True:
-        try:
-            value = input('[PARAM] ' + label + ' ')
-            if value == '':
-                return None
-
-            return callback(value)
-
-        except ValueError:
-            pass
+def motor1():
+    motor = Motor(13, 19, 12, (16, 17, 20), 4)
+    for i in range(3):
+        motor.step(200, .0001)
+        motor.angle(-360, .0001, Motor.MOVE_EASE)
 
 
-def main():
-    tracker = Tracker()
-
-    if 'y' != input('[PARAM] execute         [y/n]: ').lower():
-        sys.stdout.write('aborted\n')
-        sys.stdout.flush()
-        return
-
-    tracker.execute()
+def motor2():
+    motor = Motor(24, 18, 4, (21, 22, 27), 4)
+    for i in range(3):
+        motor.angle(-360, .0001, Motor.MOVE_EASE)
+        motor.step(200, .0001)
 
 
 if __name__ == '__main__':
-    main()
+    threading.Thread(target=motor1).start()
+    threading.Thread(target=motor2).start()

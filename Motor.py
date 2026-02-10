@@ -62,11 +62,17 @@ class Motor:
                 time.sleep(delay)
 
         if self.MOVE_EASE == profile:
+            delay_end = delay * 20
+
             for i in range(steps):
                 if 25 >= i:
-                    d = math.cos(25 / 180 * i) * delay * 10
+                    progress = i / (steps - 1) if steps > 1 else 1
+                    multiplier = math.cos(progress * (math.pi / 2))
+                    d = delay_end + (delay - delay_end) * multiplier
                 elif 25 >= steps - i:
-                    d = math.acos(25 / 180 * i) * delay * 10
+                    progress = i / (steps - 1) if steps > 1 else 1
+                    factor = math.cos((progress ** 2) * (math.pi / 2))
+                    d = delay_end + (delay - delay_end) * factor
                 else:
                     d = delay
 

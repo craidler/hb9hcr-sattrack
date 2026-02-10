@@ -3,19 +3,12 @@ import gpiozero as GPIO
 
 
 class Motor:
-    PROFILE_LINEAR = 'L'
-    PROFILE_PLATEAU = 'P'
-    PROFILE_SINUS = 'S'
-    PROFILE_TRAPEZE = 'T'
+    MOVE_LINEAR = 'L'
+    MOVE_PLATEAU = 'P'
+    MOVE_SINUS = 'S'
+    MOVE_TRAPEZE = 'T'
 
-    STEP_01 = (0, 0, 0)
-    STEP_02 = (1, 0, 0)
-    STEP_04 = (0, 1, 0)
-    STEP_08 = (1, 1, 0)
-    STEP_16 = (0, 0, 1)
-    STEP_32 = (1, 0, 1)
-
-    def __init__(self, direction, step, enable, mode, microstep=STEP_01):
+    def __init__(self, direction, step, enable, mode, size=1):
         self.pin_direction = direction
         self.pin_enable = enable
         self.pin_step = step
@@ -30,16 +23,27 @@ class Motor:
             mode[2]: GPIO.LED(mode[2]),
         }
 
+        self.sizes = {
+            1: (0, 0, 0),
+            2: (1, 0, 0),
+            4: (0, 1, 0),
+            8: (1, 1, 0),
+            16: (0, 0, 1),
+            32: (1, 0, 1),
+        }
+
+        self.size = size
+
         j = 0
-        for i in microstep:
+        for i in self.sizes[size]:
             self.write(self.pin_mode[j], i)
             j = j + 1
 
-    def angle(self, degree, delay=.001, profile=PROFILE_LINEAR):
-        return self.step(degree / 1.8, delay, profile)
+    def angle(self, degree, delay=.001, profile=MOVE_LINEAR):
+        return self.step((degree / 1.8) * self.size, delay, profile)
 
-    def step(self, steps, delay=.001, profile=PROFILE_LINEAR):
-        steps = int(steps)
+    def step(self, steps, delay=.001, profile=MOVE_LINEAR):
+        steps = int(steps * self.size)
 
         if 0 == steps:
             return self
@@ -49,14 +53,14 @@ class Motor:
 
         steps = abs(steps)
 
-        if self.PROFILE_LINEAR == profile:
+        if self.MOVE_LINEAR == profile:
             for i in range(steps):
                 self.write(self.pin_step, True)
                 time.sleep(delay)
                 self.write(self.pin_step, False)
                 time.sleep(delay)
 
-        if self.PROFILE_SINUS == profile:
+        if self.MOVE_SINUS == profile:
             stretch = 10
             steep = 10
 
@@ -69,7 +73,7 @@ class Motor:
                 self.write(self.pin_step, False)
                 time.sleep(d)
 
-        if self.PROFILE_TRAPEZE == profile:
+        if self.MOVE_TRAPEZE == profile:
             stretch = 10
             ramp = 50
 
@@ -85,7 +89,7 @@ class Motor:
                 self.write(self.pin_step, False)
                 time.sleep(d)
 
-        if self.PROFILE_PLATEAU == profile:
+        if self.MOVE_PLATEAU == profile:
             stretch = 10
             cruise = .3
 
@@ -114,7 +118,7 @@ class Motor:
 
 
 if __name__ == '__main__':
-    motor = Motor(13, 19, 12, (16, 17, 20))
+    motor = Motor(13, 19, 12, (16, 17, 20), 4)
     motor.step(200)
     time.sleep(1)
     motor.angle(-90)

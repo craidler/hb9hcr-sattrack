@@ -3,9 +3,19 @@ import gpiozero as GPIO
 
 
 def inertial_ease_in_out(i, total_i, max_delay, min_delay):
+    ramp_limit = 0.1
     progress = i / (total_i - 1) if total_i > 1 else 0
-    factor = (math.cos(2 * math.pi * progress) + 1) / 2
-    return min_delay + (max_delay - min_delay) * factor
+
+    if progress < ramp_limit:
+        p = progress / ramp_limit
+        factor = (math.cos(p * math.pi) + 1) / 2
+        return min_delay + (max_delay - min_delay) * factor
+    elif progress <= (1 - ramp_limit):
+        return min_delay
+    else:
+        p = (progress - (1 - ramp_limit)) / ramp_limit
+        factor = (1 - math.cos(p * math.pi)) / 2
+        return min_delay + (max_delay - min_delay) * factor
 
 
 class Motor:

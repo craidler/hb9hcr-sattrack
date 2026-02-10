@@ -4,6 +4,7 @@ import gpiozero as GPIO
 
 class Motor:
     MOVE_LINEAR = 'L'
+    MOVE_EASE = 'E'
     MOVE_PLATEAU = 'P'
     MOVE_SINUS = 'S'
     MOVE_TRAPEZE = 'T'
@@ -40,7 +41,7 @@ class Motor:
             j = j + 1
 
     def angle(self, degree, delay=.001, profile=MOVE_LINEAR):
-        return self.step((degree / 1.8) * self.size, delay, profile)
+        return self.step(degree / 1.8, delay, profile)
 
     def step(self, steps, delay=.001, profile=MOVE_LINEAR):
         steps = int(steps * self.size)
@@ -59,6 +60,20 @@ class Motor:
                 time.sleep(delay)
                 self.write(self.pin_step, False)
                 time.sleep(delay)
+
+        if self.MOVE_EASE == profile:
+            for i in range(steps):
+                if 25 >= i:
+                    d = math.cos(25 / 180 * i) * delay * 10
+                elif 25 >= steps - i:
+                    d = math.acos(25 / 180 * i) * delay * 10
+                else:
+                    d = delay
+
+                self.write(self.pin_step, True)
+                time.sleep(d)
+                self.write(self.pin_step, False)
+                time.sleep(d)
 
         if self.MOVE_SINUS == profile:
             stretch = 10
@@ -123,4 +138,4 @@ if __name__ == '__main__':
     time.sleep(1)
     motor.angle(-90)
     time.sleep(1)
-    motor.angle(-270)
+    motor.angle(-270, .001, Motor.MOVE_EASE)

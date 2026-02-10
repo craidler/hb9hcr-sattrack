@@ -3,28 +3,16 @@ import gpiozero as GPIO
 
 
 def inertial_ease_in_out(i, total_i, max_delay, min_delay):
-    # 10% ramp-up, 80% cruise (full speed), 10% ramp-down
     ramp_limit = 0.1
     progress = i / (total_i - 1) if total_i > 1 else 0
-
-    # Phase 1: Accelerating (Delay dropping from Max to Min)
     if progress < ramp_limit:
-        # Scale progress to 0.0 - 1.0 for the ramp duration
         p = progress / ramp_limit
-        # Cosine from 0 to pi moves from 1 to -1.
-        # Shifting it to 1 -> 0 makes the delay drop smoothly.
         factor = (math.cos(p * math.pi) + 1) / 2
         return min_delay + (max_delay - min_delay) * factor
-
-    # Phase 2: High-Speed Cruise (80% of total movement)
     elif progress <= (1 - ramp_limit):
         return min_delay
-
-    # Phase 3: Decelerating (Delay rising from Min to Max)
     else:
-        # Scale progress to 0.0 - 1.0 for the ramp duration
         p = (progress - (1 - ramp_limit)) / ramp_limit
-        # Cosine from pi to 2pi (or 1-cos) moves from 0 to 1 smoothly.
         factor = (1 - math.cos(p * math.pi)) / 2
         return min_delay + (max_delay - min_delay) * factor
 
@@ -32,9 +20,6 @@ def inertial_ease_in_out(i, total_i, max_delay, min_delay):
 class Motor:
     MOVE_LINEAR = 'L'
     MOVE_EASE = 'E'
-    MOVE_PLATEAU = 'P'
-    MOVE_SINUS = 'S'
-    MOVE_TRAPEZE = 'T'
 
     def __init__(self, direction, step, enable, mode, size=1):
         self.pin_direction = direction
@@ -98,51 +83,6 @@ class Motor:
                 self.write(self.pin_step, False)
                 time.sleep(d)
 
-        if self.MOVE_SINUS == profile:
-            stretch = 10
-            steep = 10
-
-            for i in range(steps):
-                x = (i / steps) * 2 - 1
-                f = 1 / (1 + math.exp(-steep * (x + .5))) * (1 / (1 + math.exp(steep * (x - .5))))
-                d = delay * stretch - (f * (delay * stretch - delay))
-                self.write(self.pin_step, True)
-                time.sleep(d)
-                self.write(self.pin_step, False)
-                time.sleep(d)
-
-        if self.MOVE_TRAPEZE == profile:
-            stretch = 10
-            ramp = 50
-
-            for i in range(steps):
-                if ramp > i:
-                    d = delay + (delay * stretch * (i / ramp))
-                elif steps - ramp < i:
-                    d = delay + (delay * stretch * ((steps - i) / ramp))
-                else:
-                    d = delay
-                self.write(self.pin_step, True)
-                time.sleep(d)
-                self.write(self.pin_step, False)
-                time.sleep(d)
-
-        if self.MOVE_PLATEAU == profile:
-            stretch = 10
-            cruise = .3
-
-            for i in range(steps):
-                phase = (i / steps) * 2 * math.pi
-                raw_sine = math.sin(phase)
-                limit = 1.0 - cruise
-                clipped_sine = max(min(-raw_sine, limit), -limit)
-                normalized = (clipped_sine + limit) / (2 * limit)
-                d = delay + (normalized * (delay * stretch - delay))
-                self.write(self.pin_step, True)
-                time.sleep(d)
-                self.write(self.pin_step, False)
-                time.sleep(d)
-
         self.write(self.pin_enable, False)
         return self
 
@@ -157,8 +97,6 @@ class Motor:
 
 if __name__ == '__main__':
     motor = Motor(13, 19, 12, (16, 17, 20), 4)
-    motor.step(200)
+    motor.step(200, .0001)
     time.sleep(1)
-    motor.angle(-90)
-    time.sleep(1)
-    motor.angle(-270, .002, Motor.MOVE_EASE)
+    motor.angle(-360, .0001, Motor.MOVE_EASE)

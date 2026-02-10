@@ -2,6 +2,18 @@ import math, time
 import gpiozero as GPIO
 
 
+def _ease_in(i, steps, delay_start, delay_end):
+    progress = i / (steps - 1) if steps > 1 else 1
+    factor = math.cos(progress * (math.pi / 2))
+    return delay_end + (delay_start - delay_end) * factor
+
+
+def _ease_out(i, steps, delay_start, delay_end):
+    progress = i / (steps - 1) if steps > 1 else 1
+    factor = 1 - math.sin(progress * (math.pi / 2))
+    return delay_end + (delay_start - delay_end) * factor
+
+
 class Motor:
     MOVE_LINEAR = 'L'
     MOVE_EASE = 'E'
@@ -66,13 +78,9 @@ class Motor:
 
             for i in range(steps):
                 if 25 >= i:
-                    progress = i / (steps - 1) if steps > 1 else 1
-                    multiplier = math.cos(progress * (math.pi / 2))
-                    d = delay_end + (delay - delay_end) * multiplier
+                    d = _ease_in(i, 25, delay, delay_end)
                 elif 25 >= steps - i:
-                    progress = i / (steps - 1) if steps > 1 else 1
-                    factor = math.cos((progress ** 2) * (math.pi / 2))
-                    d = delay_end + (delay - delay_end) * factor
+                    d = _ease_out(steps - i, 25, delay, delay_end)
                 else:
                     d = delay
 

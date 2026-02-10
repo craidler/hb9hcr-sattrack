@@ -8,10 +8,18 @@ class Motor:
     PROFILE_SINUS = 'S'
     PROFILE_TRAPEZE = 'T'
 
-    def __init__(self, direction, step, enable, mode):
+    STEP_01 = (0, 0, 0)
+    STEP_02 = (1, 0, 0)
+    STEP_04 = (0, 1, 0)
+    STEP_08 = (1, 1, 0)
+    STEP_16 = (0, 0, 1)
+    STEP_32 = (1, 0, 1)
+
+    def __init__(self, direction, step, enable, mode, microstep=STEP_01):
         self.pin_direction = direction
         self.pin_enable = enable
         self.pin_step = step
+        self.pin_mode = mode
 
         self.control = {
             direction: GPIO.LED(direction),
@@ -21,6 +29,11 @@ class Motor:
             mode[1]: GPIO.LED(mode[1]),
             mode[2]: GPIO.LED(mode[2]),
         }
+
+        j = 0
+        for i in microstep:
+            self.write(self.pin_mode[j], i)
+            j = j + 1
 
     def turn(self, profile, steps, delay=.001):
         steps = int(steps)
@@ -98,12 +111,6 @@ class Motor:
 
 
 if __name__ == '__main__':
-    motor = Motor(13, 19, 12, (16, 17, 20))
+    motor = Motor(13, 19, 12, (16, 17, 20), Motor.STEP_04)
     motor.turn(motor.PROFILE_LINEAR, 200)
-    time.sleep(1)
-    motor.turn(motor.PROFILE_PLATEAU, 200)
-    time.sleep(1)
-    motor.turn(motor.PROFILE_SINUS, 200)
-    time.sleep(1)
-    motor.turn(motor.PROFILE_TRAPEZE, 200)
     time.sleep(1)

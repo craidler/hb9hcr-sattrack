@@ -64,7 +64,22 @@ class Motor:
                     d = delay + (delay * stretch * ((steps - i) / ramp))
                 else:
                     d = delay
+                self.write(self.pin_step, True)
+                time.sleep(d)
+                self.write(self.pin_step, False)
+                time.sleep(d)
 
+        if self.PROFILE_PLATEAU == profile:
+            stretch = 10
+            cruise = .3
+
+            for i in range(steps):
+                phase = (i / steps) * 2 * math.pi
+                raw_sine = math.sin(phase)
+                limit = 1.0 - cruise
+                clipped_sine = max(min(-raw_sine, limit), -limit)
+                normalized = (clipped_sine + limit) / (2 * limit)
+                d = delay + (normalized * (delay * stretch - delay))
                 self.write(self.pin_step, True)
                 time.sleep(d)
                 self.write(self.pin_step, False)
@@ -85,13 +100,10 @@ class Motor:
 if __name__ == '__main__':
     motor = Motor(13, 19, 12, (16, 17, 20))
     motor.turn(motor.PROFILE_LINEAR, 200)
-    time.sleep(.2)
-    motor.turn(motor.PROFILE_LINEAR, -200)
+    time.sleep(1)
+    motor.turn(motor.PROFILE_PLATEAU, 200)
     time.sleep(1)
     motor.turn(motor.PROFILE_SINUS, 200)
-    time.sleep(.2)
-    motor.turn(motor.PROFILE_SINUS, -200)
     time.sleep(1)
     motor.turn(motor.PROFILE_TRAPEZE, 200)
-    time.sleep(.2)
-    motor.turn(motor.PROFILE_TRAPEZE, -200)
+    time.sleep(1)

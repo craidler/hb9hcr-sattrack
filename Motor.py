@@ -22,41 +22,13 @@ class Motor:
             mode[2]: GPIO.LED(mode[2]),
         }
 
-    '''
-    def trapeze(self, steps, delay=.001, delay_max=.01):
-        if 100 > abs(steps):
-            self.linear(steps, delay)
-            return
-
-        direction = 'forward'
-
-        if 0 > steps:
-            direction = 'backward'
-            steps = abs(steps)
-
-        steps_ramp = min(50, steps / 2)
-
-        for i in range(steps):
-            if i < steps_ramp:
-                d = delay_max - (i / steps_ramp) * (delay_max - delay)
-            elif i >= (steps - steps_ramp):
-                c = i - (steps - steps_ramp)
-                d = delay + (c / steps_ramp) * (delay_max - delay)
-            else:
-                d = delay
-
-            self.driver.TurnStep(direction, 1, d)
-
-        return self
-    '''
-
     def turn(self, profile, steps, delay=.001):
         steps = int(steps)
 
         if 0 == steps:
             return self
 
-        self.write(self.pin_direction, bool(steps))
+        self.write(self.pin_direction, int(steps > 0))
         self.write(self.pin_enable, True)
 
         steps = abs(steps)
@@ -71,10 +43,28 @@ class Motor:
         if self.PROFILE_SINUS == profile:
             stretch = 10
             steep = 10
+
             for i in range(steps):
                 x = (i / steps) * 2 - 1
                 f = 1 / (1 + math.exp(-steep * (x + .5))) * (1 / (1 + math.exp(steep * (x - .5))))
                 d = delay * stretch - (f * (delay * stretch - delay))
+                self.write(self.pin_step, True)
+                time.sleep(d)
+                self.write(self.pin_step, False)
+                time.sleep(d)
+
+        if self.PROFILE_TRAPEZE == profile:
+            stretch = 10
+            ramp = 50
+
+            for i in range(steps):
+                if ramp > i:
+                    d = delay + (delay * stretch * (i / ramp))
+                elif steps - ramp < i:
+                    d = delay + (delay * stretch * ((steps - i) / ramp))
+                else:
+                    d = delay
+
                 self.write(self.pin_step, True)
                 time.sleep(d)
                 self.write(self.pin_step, False)
@@ -94,10 +84,14 @@ class Motor:
 
 if __name__ == '__main__':
     motor = Motor(13, 19, 12, (16, 17, 20))
-    motor.turn(motor.PROFILE_LINEAR, 400)
+    motor.turn(motor.PROFILE_LINEAR, 200)
     time.sleep(.2)
-    motor.turn(motor.PROFILE_LINEAR, -400)
+    motor.turn(motor.PROFILE_LINEAR, -200)
     time.sleep(1)
-    motor.turn(motor.PROFILE_SINUS, 400)
+    motor.turn(motor.PROFILE_SINUS, 200)
     time.sleep(.2)
-    motor.turn(motor.PROFILE_SINUS, -400)
+    motor.turn(motor.PROFILE_SINUS, -200)
+    time.sleep(1)
+    motor.turn(motor.PROFILE_TRAPEZE, 200)
+    time.sleep(.2)
+    motor.turn(motor.PROFILE_TRAPEZE, -200)

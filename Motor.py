@@ -3,17 +3,28 @@ import gpiozero as GPIO
 
 
 def inertial_ease_in_out(i, total_i, max_delay, min_delay):
+    # 10% ramp-up, 80% cruise (full speed), 10% ramp-down
     ramp_limit = 0.1
     progress = i / (total_i - 1) if total_i > 1 else 0
 
+    # Phase 1: Accelerating (Delay dropping from Max to Min)
     if progress < ramp_limit:
+        # Scale progress to 0.0 - 1.0 for the ramp duration
         p = progress / ramp_limit
+        # Cosine from 0 to pi moves from 1 to -1.
+        # Shifting it to 1 -> 0 makes the delay drop smoothly.
         factor = (math.cos(p * math.pi) + 1) / 2
         return min_delay + (max_delay - min_delay) * factor
+
+    # Phase 2: High-Speed Cruise (80% of total movement)
     elif progress <= (1 - ramp_limit):
         return min_delay
+
+    # Phase 3: Decelerating (Delay rising from Min to Max)
     else:
+        # Scale progress to 0.0 - 1.0 for the ramp duration
         p = (progress - (1 - ramp_limit)) / ramp_limit
+        # Cosine from pi to 2pi (or 1-cos) moves from 0 to 1 smoothly.
         factor = (1 - math.cos(p * math.pi)) / 2
         return min_delay + (max_delay - min_delay) * factor
 

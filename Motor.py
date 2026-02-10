@@ -35,7 +35,10 @@ class Motor:
             self.write(self.pin_mode[j], i)
             j = j + 1
 
-    def turn(self, profile, steps, delay=.001):
+    def angle(self, degree, delay=.001, profile=PROFILE_LINEAR):
+        return self.step(degree / 1.8, delay, profile)
+
+    def step(self, steps, delay=.001, profile=PROFILE_LINEAR):
         steps = int(steps)
 
         if 0 == steps:
@@ -111,6 +114,9 @@ class Motor:
 
 
 if __name__ == '__main__':
-    motor = Motor(13, 19, 12, (16, 17, 20), Motor.STEP_04)
-    motor.turn(motor.PROFILE_LINEAR, 200)
+    motor = Motor(13, 19, 12, (16, 17, 20))
+    motor.step(200)
     time.sleep(1)
+    motor.angle(-90)
+    time.sleep(1)
+    motor.angle(-270)

@@ -7,6 +7,7 @@
 - [ ] [2x Abzweigdose](https://www.bauhaus.ch/de/schalterdosen/feuchtraum-abzweigdose/p/22557412) 6.-
 - [ ] [2x 20x20x1000mm Quadratrohr](https://www.bauhaus.ch/de/quadratrohre/kantoflex-vierkantrohr/p/10508571) 16.-
 - [ ] [11x 4x1000mm Rundstab](https://www.bauhaus.ch/de/stangen/kantoflex-rundstange/p/10520061) 34.10
+- [ ] [1x 1:30 DoubleShaft Reduction](https://de.aliexpress.com/item/1005009587865807.html)
 - [x] Hot glue
 
 ![alt text](Skizze.jpeg "Skizze")

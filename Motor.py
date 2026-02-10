@@ -17,6 +17,41 @@ def ease_in_out(i, total_i, max_delay, min_delay):
         return min_delay + (max_delay - min_delay) * factor
 
 
+def get_stepper_delay(current_step, total_steps, max_speed, min_speed=1.0):
+    """
+    Calculates the inter-pulse delay for a sin^2 ease-in/out profile.
+
+    Args:
+        current_step (int): The current step index.
+        total_steps (int): Total steps in the move.
+        max_speed (float): Steps per second at cruising speed.
+        min_speed (float): The 'floor' speed to avoid division by zero.
+
+    Returns:
+        float: Delay in seconds before the next pulse.
+    """
+    # 10% Accel, 80% Cruise, 10% Decel
+    accel_limit = total_steps * 0.10
+    decel_start = total_steps * 0.90
+
+    # Calculate instantaneous speed based on quadratic sinus
+    if current_step < accel_limit:
+        phase = (current_step / accel_limit) * (math.pi / 2)
+        speed = max_speed * (math.sin(phase) ** 2)
+
+    elif current_step < decel_start:
+        speed = max_speed
+
+    else:
+        decel_progress = (current_step - decel_start) / accel_limit
+        phase = (math.pi / 2) + (decel_progress * (math.pi / 2))
+        speed = max_speed * (math.sin(phase) ** 2)
+
+    # Ensure speed never hits absolute zero to avoid ZeroDivisionError
+    actual_speed = max(speed, min_speed)
+
+    return 1.0 / actual_speed
+
 class Motor:
     MOVE_LINEAR = 'L'
     MOVE_EASE = 'E'
@@ -77,7 +112,8 @@ class Motor:
             delay_end = delay * 20
 
             for i in range(steps):
-                d = ease_in_out(i, steps, delay_end, delay)
+                # d = ease_in_out(i, steps, delay_end, delay)
+                d = get_stepper_delay(i, steps, 100, 1)
                 self.write(self.pin_step, True)
                 time.sleep(d)
                 self.write(self.pin_step, False)

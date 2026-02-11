@@ -11,4 +11,4 @@
 - [ ] [1x 1:30 DoubleShaft Reduction](https://de.aliexpress.com/item/1005009587865807.html)
 - [x] Hot glue
 
-![Elevation Axis Construction](Elevation.png)
+![Project](project.png)

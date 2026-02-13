@@ -9,6 +9,9 @@
 - [ ] [2x 20x20x1000mm Quadratrohr](https://www.bauhaus.ch/de/quadratrohre/kantoflex-vierkantrohr/p/10508571) 16.-
 - [ ] [11x 4x1000mm Rundstab](https://www.bauhaus.ch/de/stangen/kantoflex-rundstange/p/10520061) 34.10
 - [ ] [1x 1:30 DoubleShaft Reduction](https://de.aliexpress.com/item/1005009587865807.html)
+- [ ] [1x Casing](https://www.bastelgarage.ch/mechanische-bauteile/gehause/200x150x100mm-ip67-kunststoffgehause)
+- [x] [[2x KFL08 Bearing](https://www.bastelgarage.ch/kfl08-8mm-kugellager-mit-halterung-horizontal?search=KFL08)
+- [x] [1x Piezo Buzzer](https://www.bastelgarage.ch/piezo-buzzer-modul-mit-transistor?search=Piezo%20Buzzer%20Modul%20mit%20Transistor)
 - [x] Hot glue
 
 ![Project](project.png)

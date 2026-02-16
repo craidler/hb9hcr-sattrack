@@ -14,4 +14,4 @@
 - [x] [1x Piezo Buzzer](https://www.bastelgarage.ch/piezo-buzzer-modul-mit-transistor?search=Piezo%20Buzzer%20Modul%20mit%20Transistor)
 - [x] Hot glue
 
-![Project](project.png)
+![Project](Skizze.jpeg)

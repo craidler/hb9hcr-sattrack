@@ -12,19 +12,25 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
+                "${workspaceFolder}/**",
+                "~/.arduino15/packages/arduino/hardware/renesas_uno/**",
+                "~/Arduino/libraries/**",
+                "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/api/**",
+                "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/variants/UNOWIFIR4/includes/ra/fsp/inc/api/**",
+                "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/variants/UNOWIFIR4/includes/ra/fsp/inc/instances/**",
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/tinyusb",
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/api/deprecated",
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/api/deprecated-avr-comp",
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino",
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/variants/NANOR4",
-                "/home/craidler/Arduino/libraries/LiquidCrystal_I2C",
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/libraries/Wire",
                 "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include/c++/7.2.1",
                 "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include/c++/7.2.1/arm-none-eabi",
                 "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include/c++/7.2.1/backward",
                 "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/lib/gcc/arm-none-eabi/7.2.1/include",
                 "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/lib/gcc/arm-none-eabi/7.2.1/include-fixed",
-                "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include"
+                "/home/craidler/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/arm-none-eabi/include",
+                "/home/craidler/Arduino/libraries/LiquidCrystal_I2C"
             ],
             "forcedInclude": [
                 "/home/craidler/.arduino15/packages/arduino/hardware/renesas_uno/1.5.3/cores/arduino/Arduino.h"

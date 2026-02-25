@@ -2,10 +2,12 @@
 
 Sattrack_Computer Computer = Sattrack_Computer();
 
-void setup() {
-  Computer.init();
+void setup()
+{
+    Computer.init();
 }
 
-void loop() {
-  Computer.loop();
+void loop()
+{
+    Computer.loop();
 }

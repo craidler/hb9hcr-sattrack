@@ -36,6 +36,7 @@ typedef struct {
     uint32_t buffer;
     uint32_t mem[100];
     uint32_t reg[3];
+    uint32_t last;
     uint8_t digit;
     uint8_t limit;
     uint8_t verb;
@@ -170,9 +171,8 @@ void handle(Computer* c, char k) {
             clear(&c->display);
 
             for (c->i = 0; c->i <= c->limit; c->i++) {
-                if (1 == c->noun + c->i) date(&c->clock, c->reg[c->i]);
-                if (2 == c->noun + c->i) time(&c->clock, c->reg[c->i]);
-                if (2 == c->noun + c->i) Serial.println("set time");
+                if (4 == c->noun + c->i) date(&c->clock, c->reg[c->i]);
+                if (5 == c->noun + c->i) time(&c->clock, c->reg[c->i]);
                 c->mem[c->noun + c->i] = c->reg[c->i];
             }
 
@@ -191,9 +191,10 @@ void loop() {
 }
 
 void process(Computer* c) {
-    c->mem[1] = micros() - c->mem[0];
-    c->mem[0] = micros();
-    c->mem[2] = 1000000 / c->mem[1];
+    c->mem[2] = 1000000 / (micros() - c->last);
+    c->last = micros();
+    c->mem[0] = millis();
+    c->mem[1] = c->mem[0] / 500 % 2;
     c->mem[3] = timestamp(&c->clock);
     c->mem[4] = date(&c->clock);
     c->mem[5] = time(&c->clock);
@@ -210,10 +211,10 @@ void process(Computer* c) {
 }
 
 void setup() {
-    strcpy(Label[0], "MICROS");
-    strcpy(Label[1], "MICROS DT");
+    strcpy(Label[0], "MS");
+    strcpy(Label[1], "MS ALT");
     strcpy(Label[2], "HZ");
-    strcpy(Label[3], "UNIX");
+    strcpy(Label[3], "TS");
     strcpy(Label[4], "DATE");
     strcpy(Label[5], "TIME");
     strcpy(Label[50], "AOS TIME");
@@ -246,8 +247,8 @@ void clear(Display* d) {
 }
 
 void render(Computer* c) {
-    if (millis() - c->display.last < 200) return;
-    c->display.last = millis();
+    if (c->mem[0] - c->display.last < 200) return;
+    c->display.last = c->mem[0];
 
     // backlight on
     if (!c->display.backlight && 0 != c->display.tot) {
@@ -257,11 +258,11 @@ void render(Computer* c) {
 
     // indicators
     snprintf(c->display.scrub, sizeof(c->display.scrub), "%c%02d %c%02d %c        P%02d",
-             VERB == c->state ? (millis() / 500 % 2 ? 'V' : ' ') : 'V',
+             VERB == c->state ? (c->mem[1] ? 'V' : ' ') : 'V',
              VERB == c->state ? c->buffer : c->verb,
-             NOUN == c->state ? (millis() / 500 % 2 ? 'N' : ' ') : 'N',
+             NOUN == c->state ? (c->mem[1] ? 'N' : ' ') : 'N',
              NOUN == c->state ? c->buffer : c->noun,
-             ERROR == c->state ? (millis() / 500 % 2 ? 'E' : ' ') : ' ',
+             ERROR == c->state ? (c->mem[1] ? 'E' : ' ') : ' ',
              c->prog);
     c->display.device.setCursor(0, 0);
     c->display.device.print(c->display.scrub);
@@ -281,7 +282,7 @@ void render(Computer* c) {
     if (DATA == c->state && 21 <= c->verb && c->verb <= 23) {
         for (c->i = 0; c->i <= c->verb - 21; c->i++) {
             snprintf(c->display.scrub, sizeof(c->display.scrub), "%-10s%10d",
-                     c->data == c->i ? (millis() / 500 % 2 ? Label[c->noun + c->i] : "") : Label[c->noun + c->i],
+                     c->data == c->i ? (c->mem[1] ? Label[c->noun + c->i] : "") : Label[c->noun + c->i],
                      c->reg[c->i]);
             c->display.device.setCursor(0, c->i + 1);
             c->display.device.print(c->display.scrub);
@@ -291,7 +292,7 @@ void render(Computer* c) {
     }
 
     // backlight off
-    if (0 != c->display.tot && millis() - c->display.tot > 10000) {
+    if (0 != c->display.tot && c->mem[0] - c->display.tot > 10000) {
         c->display.device.setBacklight(false);
         c->display.backlight = false;
         c->display.tot = 0;
@@ -357,39 +358,31 @@ void program_50(Computer* c) {
 
     // initialize
     if (P50_INIT == c->mem[90]) {
-        if (c->mem[50] == c->mem[53]) c->state = State::ERROR;  // aos az = los az
-        if (c->mem[51] <= c->mem[54]) c->state = State::ERROR;  // aos time <= los time
-        if (!c->mem[56]) c->state = State::ERROR;               // max el = 0
-        if (State::ERROR == c->state) {
-            c->prog = 0;
-            return;
-        }
-
         c->mem[90] = P50_STBY;
-        c->mem[91] = timestamp(c->mem[4], c->mem[51]);  // aos timestamp
-        c->mem[92] = timestamp(c->mem[5], c->mem[54]);  // los timestamp
+        c->mem[92] = timestamp(c->mem[4], c->mem[50]);  // aos timestamp
+        c->mem[93] = timestamp(c->mem[4], c->mem[53]);  // los timestamp
+        // todo validation or c->state = ERROR
         return;
     }
 
     // wait for aos
     if (P50_STBY == c->mem[90]) {
-        c->mem[93] = c->mem[91] - c->mem[3];  // countdown
-
-        if (c->mem[91] < c->mem[3]) return;
+        c->mem[91] = c->mem[92] - c->mem[3];  // countdown
+        if (c->mem[92] > c->mem[3]) return;
         c->mem[90] = P50_TRCK;
         return;
     }
 
     // track until los
     if (P50_TRCK == c->mem[90]) {
-        c->mem[93] = c->mem[91] - c->mem[3];  // countdown
-
-        if (c->mem[92] < c->mem[1]) return;
+        c->mem[91] = c->mem[93] - c->mem[3];  // countdown
+        if (c->mem[93] > c->mem[3]) return;
         c->mem[90] = P50_HOME;
         return;
     }
 
     if (P50_HOME == c->mem[90]) {
+        c->mem[90] = c->mem[91] = c->mem[92] = c->mem[93] = 0;
         c->prog = 0;
         return;
     }

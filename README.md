@@ -14,6 +14,18 @@ I use the liquid crystal display which has 20x4 character slots as visual feedba
 
 ![DSKY Display](./img/display.jpeg)
 
+### Actuator
+- Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html
+
+### Sensors
+- I2C BMM350 Triple-Axis Magnetometer Sensor https://www.dfrobot.com/product-2874.html
+- I2C BMI160 6-Axis Inertial Motion Sensor https://www.dfrobot.com/product-1716.html
+- I2C Digital Wattmeter https://www.dfrobot.com/product-1827.html
+
+### Other
+- I2C DS1307 RTC Module https://www.dfrobot.com/product-879.html
+- I2C HUB https://www.dfrobot.com/product-2179.html
+
 ## Command
 
 ### VERB

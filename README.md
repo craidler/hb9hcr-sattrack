@@ -1,5 +1,5 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
-Challenge accepted: Manufacture an mechatronic pan/tilt appliance to keep Yagi antennae toward targets like ... well satellites &#x1F6F0;&#xFE0F; - or elephants &#x1F418; passing along, depending on your taste and actual weather situation.
+Challenge accepted: Manufacture an mechatronic pan/tilt appliance to keep Yagi antennae toward targets like ... well - satellites &#x1F6F0;&#xFE0F; or elephants &#x1F418; passing along, depending on your taste and actual weather situation.
 
 ## Architecture
 As a hommage to the NASA Apollo program, the appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. It also features a so called "DSKY", a user interface consisting of a display and a keyboard - in this case a 4x4 button pad. The command strucuture follows a syntax consisting of numeric sequences.
@@ -17,7 +17,7 @@ All the modules are wrapped into a `struct` which also contains there state and 
 - Servo Elevation (tbd)
 
 ### Antenna
-- [Yagi 7-Element 70cm Band](#antenna-70cm) (homebrew)
+- [Yagi 7-Element 70cm Band](#antenna-70cm) (home brew)
 - [Yagi 3-Element 2m Band](#antenna-2m) (home brew)
 
 ### Sensor

@@ -91,9 +91,9 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 20 ACC X            Accelerometer X axis in g/second
 21 ACC Y            Accelerometer Y axis in g/second
 22 ACC Z            Accelerometer Z asis in g/second
-23 GYR X            Gyrometer X axis in millidegrees?
-24 GYR Y            Gyrometer Y axis in millidegrees?
-25 GYR Z            Gyrometer Z asis in millidegrees?
+23 GYR X            Gyrometer X axis in g?
+24 GYR Y            Gyrometer Y axis in g?
+25 GYR Z            Gyrometer Z asis in g?
 26 MAG X            Magnetometer X axis in millidegrees
 27 MAG Y            Magnetometer Y axis in millidegrees
 28 MAG Z            Magnetometer Z axis in millidegrees

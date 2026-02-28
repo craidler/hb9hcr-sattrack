@@ -1,6 +1,5 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
-
-Manufacture an electromechanical pan/tilt device to keep Yagi antennae toward targets like ... satellites - or elephants.
+Challenge accepted: Manufacture an mechatronic pan/tilt appliance to keep Yagi antennae toward targets like ... well satellites &#x1F6F0;&#xFE0F; - or elephants &#x1F418; passing along, depending on your taste and actual weather situation.
 
 ## Architecture
 As a hommage to the NASA Apollo program, the appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. It also features a so called "DSKY", a user interface consisting of a display and a keyboard - in this case a 4x4 button pad. The command strucuture follows a syntax consisting of numeric sequences.
@@ -124,9 +123,43 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 ```
 
 ## Antenna
+Home brew, based on AI results and online Yagi calculator, fine tuned with an [NanoVNA H4](https://nanovna.com). My requirements are: Leight-weigth, non-conductive Boom, equal Boom length, Coil Design Beta Match.
 
 <a name="antenna-70cm"></a>
-### Yagi 7-Element 70cm Band
+### Yagi 7-Element 70cm Band &#x1F4E1;
+
+#### BOM
+- [ ] 1x 1000mm M25 PVC Tube
+- [ ] 2x M25 Cap
+- [ ] 1x 70mm M25 PVC Tube (Choke)
+- [ ] 9x M25 PVC Clamp
+- [ ] 4x 1000mm 8mm Aluminum Tube
+- [ ] 14x 8mm Cap
+- [ ] 1x 100mm 10mm Acrylic Tube (Radiator Connector)
+- [ ] 2x M4x6mm (Feedpoints)
+- [ ] 4x Ring Terminal 4mm (Coax + Beta Match)
+- [ ] 1x 100mm 1.5mm<sup>2</sup> Copper Wire (Coil Beta Match)
+- [ ] 1x Case?
+- [ ] 2x Grommet (Radiator)
+- [ ] 1x RG58 ?
+- [ ] 1x PL Female
 
 <a name="antenna-2m"></a>
-### Yagi 3-Element 2m Band
+### Yagi 3-Element 2m Band &#x1F4E1;
+
+#### BOM
+- [ ] 1x 1000mm M25 PVC Tube
+- [ ] 2x M25 Cap
+- [ ] 1x 70mm M25 PVC Tube (Choke)
+- [ ] 5x M25 PVC Clamp
+- [ ] 4x 1000mm 8mm Aluminum Tube
+- [ ] 1x 1000mm 10mm Aluminum Tube (Reflector Connector)
+- [ ] 6x 8mm Cap
+- [ ] 1x 100mm 10mm Acrylic Tube (Radiator Connector)
+- [ ] 4x M4x6mm (Feedpoint + Reflector Connector)
+- [ ] 4x Ring Terminal 4mm (Coax + Beta Match)
+- [ ] 1x 100mm 1.5mm<sup>2</sup> Copper Wire (Coil Beta Match)
+- [ ] 1x Case?
+- [ ] 2x Grommet (Radiator)
+- [ ] 1x RG58 ?
+- [ ] 1x PL Female

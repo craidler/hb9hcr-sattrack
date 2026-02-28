@@ -211,7 +211,7 @@ void process(Computer* c) {
     c->mem[4] = date(&c->clock);
     c->mem[5] = time(&c->clock);
 
-    if (c->mem[0] - c->sensor.last > 80) {
+    if (false) { // c->mem[0] - c->sensor.last > 80) {
         c->sensor.last = c->mem[0];
 
         // accelerometer

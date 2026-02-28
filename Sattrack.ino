@@ -218,7 +218,7 @@ void process(Computer* c) {
 
 void setup() {
     strcpy(Label[0], "MS");
-    strcpy(Label[1], "MS ALT");
+    strcpy(Label[1], "FF");
     strcpy(Label[2], "HZ");
     strcpy(Label[3], "TS");
     strcpy(Label[4], "DATE");

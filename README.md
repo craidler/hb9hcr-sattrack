@@ -5,7 +5,16 @@ Manufacture an electromechanical pan/tilt device to keep Yagi antennae toward ta
 ## Architecture
 The appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. It also features a so called DSKY, a user interface consisting of a display and a keyboard (keypad). The command strucuture follows a syntax consisting of numeric sequences, a so called "Verb-Noun-Combination".
 
+![Verb Noun List](./img/verb-noun.png)
+
+### Hardware
+
+#### Display
+I use the liquid crystal display which has 20x4 character slots as visual feedback of computer, program and input state:
+
 ![DSKY Display](./img/display.jpeg)
+
+## Command
 
 ### VERB
 A verb is entered first in the sentence, followed by a noun. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 
@@ -40,7 +49,7 @@ Together with a preceeding verb, the noun forms a command to be executed by the 
 #### System &#x2699;
 ```
 00 MS               Current milliseconds
-01 MS ALT           Current alternation based on milliseconds
+01 FF               Current flip-flop based on milliseconds
 02 HZ               Current processing frequency in Hertz
 03 TS               Current unix timestamp
 04 DATE             Current date from RTC

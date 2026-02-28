@@ -28,7 +28,7 @@ All the modules are wrapped into a `struct` which also contains there state and 
 
 ## Command
 
-![Verb Noun List](./img/verb-noun.png)
+![Verb Noun List](./img/verb-noun-list.jpg)
 
 ### VERB
 A `verb` is entered first in the sentence, followed by a `noun`. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 

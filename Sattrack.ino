@@ -1,5 +1,8 @@
+#include <DFRobot_BMI160.h>
+#include <DFRobot_BMM350.h>
 #include <LiquidCrystal_I2C.h>
 #include <RTC.h>
+#include <Wire.h>
 #include <string.h>
 
 char Label[100][11];
@@ -19,13 +22,15 @@ typedef struct {
 } Display;
 
 typedef struct {
-} Gyrometer;
-
-typedef struct {
-} Magnetometer;
-
-typedef struct {
 } Powermeter;
+
+typedef struct {
+    DFRobot_BMM350_I2C mag = DFRobot_BMM350_I2C(&Wire, 0x14);
+    DFRobot_BMI160 imu = DFRobot_BMI160();
+    sBmm350MagData_t data_mag;
+    int16_t data_imu[3];
+    uint32_t last;
+} Sensor;
 
 typedef enum {
     IDLE,
@@ -37,6 +42,7 @@ typedef enum {
 
 typedef struct {
     Display display = {LiquidCrystal_I2C(0x27, 20, 4)};
+    Sensor sensor = {};
     State state = IDLE;
     Clock clock;
     uint32_t buffer;
@@ -205,7 +211,32 @@ void process(Computer* c) {
     c->mem[4] = date(&c->clock);
     c->mem[5] = time(&c->clock);
 
-    // program execution in background
+    if (c->mem[0] - c->sensor.last > 80) {
+        c->sensor.last = c->mem[0];
+
+        // accelerometer
+        if (!c->sensor.imu.getAccelData(c->sensor.data_imu)) {
+            for (c->i = 0; c->i < 3; c->i++) c->mem[20 + c->i] = c->sensor.data_imu[c->i] / 16384.0;
+        }
+
+        // gyrometer
+        if (!c->sensor.imu.getGyroData(c->sensor.data_imu)) {
+            for (c->i = 0; c->i < 3; c->i++) c->mem[23 + c->i] = c->sensor.data_imu[c->i] * 3.1415 / 180.0;
+        }
+
+        // magnetometer
+        c->sensor.data_mag = c->sensor.mag.getGeomagneticData();
+        c->mem[26] = c->sensor.data_mag.x;
+        c->mem[27] = c->sensor.data_mag.y;
+        c->mem[28] = c->sensor.data_mag.z;
+
+        // compiled values
+        c->mem[30] = 0; // todo power draw milliamps
+        c->mem[31] = c->sensor.mag.getCompassDegree() * 1000;
+        c->mem[32] = 0; // todo elevation in millidegree
+    }
+
+    // program execution
     switch (c->prog) {
         case 50:
             program_50(c);
@@ -238,6 +269,8 @@ void setup() {
 void init(Computer* c) {
     c->clock.device.begin();
     set(&c->clock, 20260227, 100000);
+    c->sensor.imu.I2cInit(0x69);
+
     c->display.device.init();
     c->display.tot = millis();
 }
@@ -390,7 +423,7 @@ void program_50(Computer* c) {
     }
 
     if (P50_HOME == c->mem[90]) {
-        // move to az/el        
+        // move to az/el
         c->mem[90] = c->mem[91] = c->mem[92] = c->mem[93] = 0;
         c->prog = 0;
         return;

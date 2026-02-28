@@ -3,18 +3,16 @@
 Manufacture an electromechanical pan/tilt device to keep Yagi antennae toward targets like ... satellites - or elephants.
 
 ## Architecture
-The appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. It also features a so called DSKY, a user interface consisting of a display and a keyboard (keypad). The command strucuture follows a syntax consisting of numeric sequences, a so called "Verb-Noun-Combination".
+As a hommage to the NASA Apollo program, the appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. It also features a so called "DSKY", a user interface consisting of a display and a keyboard - in this case a 4x4 button pad. The command strucuture follows a syntax consisting of numeric sequences.
 
-![Verb Noun List](./img/verb-noun.png)
+![Verb Noun List](./img/dsky.jpg)
 
-### Hardware
-
-#### Display
-I use the liquid crystal display which has 20x4 character slots as visual feedback of computer, program and input state:
+## Hardware
+All the modules are wrapped into a `struct` which also contains there state and scrubbing variables. This way I prevent memory stack churn through leveraging shared scrubbing variables. The display runs at 5Hz refresh rate.
 
 ![DSKY Display](./img/display.jpeg)
 
-### Actuator
+### Actuators
 - Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html
 
 ### Sensors
@@ -25,11 +23,15 @@ I use the liquid crystal display which has 20x4 character slots as visual feedba
 ### Other
 - I2C DS1307 RTC Module https://www.dfrobot.com/product-879.html
 - I2C HUB https://www.dfrobot.com/product-2179.html
+- I2C 20x4 Arduino LCD Display Module https://www.dfrobot.com/product-590.html
+- Sealed Membrane 4*4 button pad https://www.dfrobot.com/product-450.html
 
 ## Command
 
+![Verb Noun List](./img/verb-noun.png)
+
 ### VERB
-A verb is entered first in the sentence, followed by a noun. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 
+A `verb` is entered first in the sentence, followed by a `noun`. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 
 
 #### Reserved
 ```
@@ -56,7 +58,7 @@ A verb is entered first in the sentence, followed by a noun. Together both form 
 ```
 
 ### NOUN
-Together with a preceeding verb, the noun forms a command to be executed by the computer. The nouns point to a specific "address" in the computers memory. Some nouns are strictly hardware device outputs which can be used in subroutines (program). The value of these nouns will be refreshed prior to the execution of any logic code.
+Together with a preceeding `verb`, the `noun` forms a command to be executed by the computer. The nouns point to a specific "address" in the computers memory. Some nouns are strictly hardware device outputs which can be used in subroutines (program). The value of these nouns will be refreshed prior to the execution of any logic code.
 
 #### System &#x2699;
 ```

@@ -19,7 +19,13 @@ typedef struct {
 } Display;
 
 typedef struct {
-} Gyroscope;
+} Gyrometer;
+
+typedef struct {
+} Magnetometer;
+
+typedef struct {
+} Powermeter;
 
 typedef enum {
     IDLE,
@@ -367,6 +373,8 @@ void program_50(Computer* c) {
 
     // wait for aos
     if (P50_STBY == c->mem[90]) {
+        // move to az/el
+
         c->mem[91] = c->mem[92] - c->mem[3];  // countdown
         if (c->mem[92] > c->mem[3]) return;
         c->mem[90] = P50_TRCK;
@@ -382,6 +390,7 @@ void program_50(Computer* c) {
     }
 
     if (P50_HOME == c->mem[90]) {
+        // move to az/el        
         c->mem[90] = c->mem[91] = c->mem[92] = c->mem[93] = 0;
         c->prog = 0;
         return;

@@ -7,24 +7,33 @@ As a hommage to the NASA Apollo program, the appliance is controlled in the mann
 
 ![Verb Noun List](./img/dsky.jpg)
 
-## Hardware
-All the modules are wrapped into a `struct` which also contains there state and scrubbing variables. This way I prevent memory stack churn through leveraging shared scrubbing variables. The display runs at 5Hz refresh rate.
+## Electronics
+All the modules are wrapped into a `struct` which also contains there state and scrubbing variables. This way I prevent memory stack churn through leveraging shared scrubbing variables. The display runs at 5Hz refresh rate. All sensor data is pulled at 12.5Hz
 
 ![DSKY Display](./img/display.jpeg)
 
-### Actuators
+### Actuator
 - Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html
+- Servo Azimuth (tbd)
+- Servo Elevation (tbd)
 
-### Sensors
-- I2C BMM350 Triple-Axis Magnetometer Sensor https://www.dfrobot.com/product-2874.html
-- I2C BMI160 6-Axis Inertial Motion Sensor https://www.dfrobot.com/product-1716.html
+### Antenna
+- [Yagi 7-Element 70cm Band](#antenna-70cm) (homebrew)
+- [Yagi 3-Element 2m Band](#antenna-2m) (home brew)
+
+### Sensor
+- I2C BMM350 Triple-Axis Magnetometer https://www.dfrobot.com/product-2874.html
+- I2C BMI160 6-Axis IMU https://www.dfrobot.com/product-1716.html
 - I2C Digital Wattmeter https://www.dfrobot.com/product-1827.html
 
 ### Other
-- I2C DS1307 RTC Module https://www.dfrobot.com/product-879.html
+- I2C DS1307 RTC https://www.dfrobot.com/product-879.html
 - I2C HUB https://www.dfrobot.com/product-2179.html
-- I2C 20x4 Arduino LCD Display Module https://www.dfrobot.com/product-590.html
+- I2C 20x4 Arduino LCD Display https://www.dfrobot.com/product-590.html
 - Sealed Membrane 4*4 button pad https://www.dfrobot.com/product-450.html
+
+## Mechanic
+tbd
 
 ## Command
 Interacting with the appliance happens through the DSKY by entering combinations of two integers called `verb` and `noun`. The computer (a finite state machine) will then process these combinations and execute accordingly. Apollo Command and Lunar modules had the most important `verb` and `noun` imprinted on a physical panel, so astronauts had a quick reference while operating the computer.
@@ -78,22 +87,25 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 05 TIME             Current time from RTC
 ```
 
-#### Sensor &#x1F4DF;
+#### Sensor &#x1F4DF; raw
 ```
-10 PWR               Current power draw in milliamperes
-.
-.
-20 ACC X            Accelerometer X axis in ?
-21 ACC Y            Accelerometer Y axis in ?
-22 ACC Z            Accelerometer Z asis in ?
-23 GYR X            Gyrometer X axis in millidegrees
-24 GYR Y            Gyrometer Y axis in millidegrees
-25 GYR Z            Gyrometer Z asis in millidegrees
+20 ACC X            Accelerometer X axis in g/second
+21 ACC Y            Accelerometer Y axis in g/second
+22 ACC Z            Accelerometer Z asis in g/second
+23 GYR X            Gyrometer X axis in millidegrees?
+24 GYR Y            Gyrometer Y axis in millidegrees?
+25 GYR Z            Gyrometer Z asis in millidegrees?
 26 MAG X            Magnetometer X axis in millidegrees
 27 MAG Y            Magnetometer Y axis in millidegrees
 28 MAG Z            Magnetometer Z axis in millidegrees
-29 MAG HEAD         Magnetometer heading in millidegrees
 ``` 
+
+#### Sensor &#x1F4DF; processed
+```
+30 MA               Current power draw in milliamperes
+31 AZ               Azimuth in millidegrees
+32 EL               Elevation in millidegrees
+```
 
 #### Program 50 &#x1F6F0;&#xFE0F; (Satellite tracker )
 ```
@@ -111,10 +123,10 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 93 LOS TS           LOS unit timestamp
 ```
 
-## BO
-### Tracker
-- [ ] ...
+## Antenna
 
-## BOM
-### Antennae
-- [ ] ...
+<a name="antenna-70cm"></a>
+### Yagi 7-Element 70cm Band
+
+<a name="antenna-2m"></a>
+### Yagi 3-Element 2m Band

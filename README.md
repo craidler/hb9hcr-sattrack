@@ -1,35 +1,85 @@
-# HB9HCR Project Sattrack
+# HB9HCR Sattrack &#x1F6F0;&#xFE0F;
 
 Manufacture an electromechanical pan/tilt device to keep Yagi antennae toward targets like ... satellites - or elephants.
 
-## Drafts
+# Verb
+A verb is entered first in the sentence, followed by a noun. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 
 
-![Project](Skizze.jpeg)
-![Tracker](HB9HCR.Sattrack.jpg)
-![Feeder](HB9HCR.Feeder.jpg)
+## Reserved
+```
+00                  not in use
+01                  display NOUN
+02                  display NOUN, NOUN+1
+03                  display NOUN, NOUN+2, NOUN+3
+.
+.
+11                  monitor NOUN
+12                  monitor NOUN, NOUN+1
+13                  monitor NOUN, NOUN+1, NOUN+2
+.
+.
+21                  load NOUN
+22                  load NOUN, NOUN+1
+23                  load NOUN, NOUN+1, NOUN+2
+.
+.
+32                  recycle program
+34                  terminate program
+36                  restart system
+37                  execute program
+```
 
-## Resources
-- [ ] Antenna for 2m Band [Yagi 4 Element 7dBd 100cm Boom](https://dk7zb.darc.de/PVC-Yagis/4-Ele-2m.htm)
-- [ ] Antenna for 70cm Band [Yagi 7 Element 10dBd Gain 100cm Boom](https://dk7zb.darc.de/PVC-Yagis/7-Ele-70cm.htm)
+## NOUN
+Together with a preceeding verb, the noun forms a command to be executed by the computer. The nouns point to a specific "address" in the computers memory. Some nouns are strictly hardware device outputs which can be used in subroutines (program). The value of these nouns will be refreshed prior to the execution of any logic code.
 
-## BOM Tracker
-- [x] 2x Nema 17
-- [ ] 2x 8mm Aluminum Tube (Elevation Axis)
-- [ ] 1x 1:30 8mm Double Shaft Reduction
-- [ ] 1x 1:30 8mm Planetary Reduction
-- [ ] 1x Case
-- [x] 2x KFL08 Bearing
+### System &#x2699;
+```
+00 MS               Current milliseconds
+01 MS ALT           Current alternation based on milliseconds
+02 HZ               Current processing frequency in Hertz
+03 TS               Current unix timestamp
+04 DATE             Current date from RTC
+05 TIME             Current time from RTC
+```
+
+### Sensor &#x1F4DF;
+```
+10 PWR               Current power draw in milliamperes
+.
+.
+20 ACC X            Accelerometer X axis in ?
+21 ACC Y            Accelerometer Y axis in ?
+22 ACC Z            Accelerometer Z asis in ?
+23 GYR X            Gyrometer X axis in millidegrees
+24 GYR Y            Gyrometer Y axis in millidegrees
+25 GYR Z            Gyrometer Z asis in millidegrees
+26 MAG X            Magnetometer X axis in millidegrees
+27 MAG Y            Magnetometer Y axis in millidegrees
+28 MAG Z            Magnetometer Z axis in millidegrees
+29 MAG HEAD         Magnetometer heading in millidegrees
+``` 
+
+### Program 50 &#x1F6F0;&#xFE0F; (Satellite tracker )
+```
+50 AOS TIME         Time of acquisition of signal
+51 AOS AZ           Azimuth at AOS
+52 AOS EL           Elevation at AOS
+53 LOS TIME         Time of loss of signal
+54 LOS AZ           Azimuth at LOS
+55 LOS EL           Elevation at AOS
+.
+.
+90 STATE            Program state
+91 T-               Countdown in seconds
+92 AOS TS           AOS unix timestamp
+93 LOS TS           LOS unit timestamp
+```
+
+
+## BO
+### Tracker
 - [ ] ...
 
-## BOM Antennae
-- [ ] 2x M25x1000m Boom PVC
-- [ ] 15x M25 Clamp
-- [ ] 2x 10x8mm Acrylic Tube (Radiator Intersections)
-- [ ] 4x M25 Boom End Cover
-- [ ] ?x 8mm Aluminum Tube
-- [ ] ?x Element End Cover
-- [ ] 2x Case
-- [ ] 4x M4 Screw, Washer, Nut
-- [x] 2x 1.5mm²x100mm Copper Wire (Ciol Beta Matches)
-- [ ] 8x Ring Terminal
-- [x] Syringe Electrical Conduit
+## BOM
+### Antennae
+- [ ] ...

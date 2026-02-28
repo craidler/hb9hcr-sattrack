@@ -31,7 +31,12 @@ Interacting with the appliance happens through the DSKY by entering combinations
 
 ![Verb Noun List](./img/verb-noun-list.jpg)
 
-I took most of the verbs I use from the Apollo 15 COLOSSUS (Command Module) software. The nouns, of course, are specific to the HB9HCR Sattrack appliance.
+I took most of the verbs I use from the Apollo 15 COLOSSUS (Command Module) software. The nouns, of course, are specific to the HB9HCR Sattrack appliance. In contrast to the original DSKY, my implementation features alpha-numeric labels for the currently active registers.
+
+#### Examples
+- Display current values of a `noun` `0` and its two subsequent nouns: `verb` `0` `3` `noun` `0` `0` `entr`
+- Set time value of AOS Azimuth to 10:00:00: `verb` `2` `1` `noun` `5` `0` `#` `1` `0` `0` `0` `0` `0` `#`   
+- Execute program 50 (the sat tracker): `verb` `3` `7` `noun` `5` `0` `#`
 
 ### VERB
 A `verb` is entered first in the sentence, followed by a `noun`. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 

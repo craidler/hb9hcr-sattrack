@@ -27,8 +27,11 @@ All the modules are wrapped into a `struct` which also contains there state and 
 - Sealed Membrane 4*4 button pad https://www.dfrobot.com/product-450.html
 
 ## Command
+Interacting with the appliance happens through the DSKY by entering combinations of two integers called `verb` and `noun`. The computer (a finite state machine) will then process these combinations and execute accordingly. Apollo Command and Lunar modules had the most important `verb` and `noun` imprinted on a physical panel, so astronauts had a quick reference while operating the computer.
 
 ![Verb Noun List](./img/verb-noun-list.jpg)
+
+I took most of the verbs I use from the Apollo 15 COLOSSUS (Command Module) software. The nouns, of course, are specific to the HB9HCR Sattrack appliance.
 
 ### VERB
 A `verb` is entered first in the sentence, followed by a `noun`. Together both form a command which can be executed by the computer. Using unassigned verbs to not have any effect. Verbs are also being used to display and manage the values stored in the computer memory. 

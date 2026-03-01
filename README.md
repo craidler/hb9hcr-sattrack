@@ -78,12 +78,15 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 
 #### System &#x2699;
 ```
-00 MS               Current milliseconds
-01 FF               Current flip-flop based on milliseconds
-02 HZ               Current processing frequency in Hertz
-03 TS               Current unix timestamp
-04 DATE             Current date from RTC
-05 TIME             Current time from RTC
+00 MS               Milliseconds
+01 MS D             Milliseconds delta
+02 FF               Current flip-flop based on milliseconds
+03 LP               Loop counter
+04 LPS              Loops per second
+05 STATE            State
+06 UX               Unix timestamp
+07 DATE             Date from RTC
+08 TIME             Time from RTC
 ```
 
 #### Sensor &#x1F4DF; raw
@@ -114,12 +117,16 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 53 LOS TIME         Time of loss of signal
 54 LOS AZ           Azimuth at LOS
 55 LOS EL           Elevation at AOS
+56 MAX EL           Maximum elevation
 .
 .
 90 STATE            Program state
 91 T-               Countdown in seconds
-92 AOS TS           AOS unix timestamp
-93 LOS TS           LOS unit timestamp
+92 TS AOS           Unix timestamp AOS (from N50)
+93 TS LOS           Unix timestamp LOS (from N53)
+94 TS MAX EL        Unix timestamp MAX EL (from N57 + N58)
+95 PASS DUR         Pass duration in seconds
+96 PROGRESS         Progress of pass in percent
 ```
 
 ## Antenna

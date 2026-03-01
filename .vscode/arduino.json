@@ -2,5 +2,6 @@
     "board": "arduino:renesas_uno:nanor4",
     "sketch": "Sattrack/Sattrack.ino",
     "port": "/dev/ttyACM0",
-    "output": "/home/craidler/Arduino/build-output"
+    "output": "/home/craidler/Arduino/build-output",
+    "programmer": "rfp"
 }

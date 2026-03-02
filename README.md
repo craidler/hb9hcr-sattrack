@@ -79,39 +79,39 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 
 #### System &#x2699;
 ```
-00 MS               Milliseconds
-01 MS D             Milliseconds delta
-02 FF               Current flip-flop based on milliseconds
-03 LP               Loop counter
-04 LPS              Loops per second
-05 STATE            State
-06 UX               Unix timestamp
-07 DATE             Date from RTC
-08 TIME             Time from RTC
+00 MS               millisecond
+01 MS D             millisecond delta
+02 FF               flip-flop
+03 LP               loop count
+04 LPS              loops per second
+05 STATE            state
+06 UX               unix timestamp
+07 DATE             date
+08 TIME             time
 ```
 
 #### Sensor &#x1F4DF; raw
 ```
-20 ACC X            Accelerometer X axis in millig/second
-21 ACC Y            Accelerometer Y axis in millig/second
-22 ACC Z            Accelerometer Z asis in millig/second
-23 GYR X            Gyrometer X axis in millig?
-24 GYR Y            Gyrometer Y axis in millig?
-25 GYR Z            Gyrometer Z asis in millig?
-26 MAG X            Magnetometer X axis in millideg
-27 MAG Y            Magnetometer Y axis in millideg
-28 MAG Z            Magnetometer Z axis in millideg
+20 ACC X            acc x           millig/second
+21 ACC Y            acc y           millig/second
+22 ACC Z            acc z           millig/second
+23 GYR X            gyr x           millig
+24 GYR Y            gyr y           millig
+25 GYR Z            gyr z           millig
+26 MAG X            mag x           millideg
+27 MAG Y            mag y           millideg
+28 MAG Z            mag z           millideg
 ``` 
 
 #### Sensor &#x1F4DF; processed
 ```
-30 VOLT             voltage (millivolt)
-31 CURR             current (milliampere)
-32 POWR             power (milliwatt)
-33 TEMP             temperature (centigree)
-34 PITCH            pitch (millidegrees)
-35 ROLL             roll (millidegrees)
-36 YAW              yaw (millidegrees)
+30 VOLT             voltage         millivolt
+31 CURR             current         milliampere
+32 POWR             power           milliwatt
+33 TEMP             temperature     centigree
+34 PITCH            pitch           millidegrees
+35 ROLL             roll            millidegrees
+36 YAW              yaw             millidegrees
 ```
 
 #### Program 50 &#x1F6F0;&#xFE0F; (Satellite tracker )

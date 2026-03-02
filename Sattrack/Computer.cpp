@@ -101,6 +101,21 @@ void Computer::execute() {
             this->data = 0;
             return;
 
+        // todo: 32
+
+        case 34:
+            if (nullptr != this->program) {
+                delete this->program;
+                this->program = nullptr;
+            }
+
+            this->prog = 0;
+            return;
+
+        case 36:
+            NVIC_SystemReset();
+            return;
+
         case 37:
             switch (this->noun) {
                 case 50:

@@ -5,6 +5,7 @@
 
 Computer::Computer() {
     Serial.begin(9600);
+
 }
 
 void Computer::input() {
@@ -146,15 +147,33 @@ void Computer::update() {
     this->mem[7] = this->clock.date();          // date
     this->mem[8] = this->clock.time();          // time
 
-    // monitor
-    if (Computer::STATE_IDLE == this->state && 11 <= this->verb && this->verb <= 13) {
-        for (this->_i = 0; this->_i < this->verb - 10; this->_i++) this->reg[this->_i] = this->mem[this->noun + this->_i];
-    }
-
     if (this->mem[1] > 1000) {
         this->mem[4] = this->mem[3];
         this->mem[3] = 0;
         this->_last = this->mem[0];
+    }
+
+    if (this->sensor.read()) {
+        // raw
+        this->mem[20] = this->sensor.data[0] * 1000;
+        this->mem[21] = this->sensor.data[1] * 1000;
+        this->mem[22] = this->sensor.data[2] * 1000;
+        this->mem[23] = this->sensor.data[3] * 1000;
+        this->mem[24] = this->sensor.data[4] * 1000;
+        this->mem[25] = this->sensor.data[5] * 1000;
+        this->mem[26] = this->sensor.data[6] * 1000;
+        this->mem[27] = this->sensor.data[7] * 1000;
+        this->mem[28] = this->sensor.data[8] * 1000;
+        // processed
+        this->mem[31] = this->sensor.data[9];
+        this->mem[32] = this->sensor.pitch * 1000;
+        this->mem[33] = this->sensor.roll * 1000;
+        this->mem[34] = this->sensor.yaw * 1000;
+    }
+
+    // monitor
+    if (Computer::STATE_IDLE == this->state && 11 <= this->verb && this->verb <= 13) {
+        for (this->_i = 0; this->_i < this->verb - 10; this->_i++) this->reg[this->_i] = this->mem[this->noun + this->_i];
     }
 }
 

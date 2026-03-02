@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "Clock.h"
+#include "Sensor.h"
 #include "Display.h"
 #include "Program.h"
 #include "Program50.h"
@@ -26,6 +27,7 @@ class Computer {
     };
 
     Clock clock = Clock();
+    Sensor sensor = Sensor();
     Program* program = nullptr;
     uint32_t mem[100];
     uint32_t reg[3];

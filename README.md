@@ -91,22 +91,24 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 
 #### Sensor &#x1F4DF; raw
 ```
-20 ACC X            Accelerometer X axis in g/second
-21 ACC Y            Accelerometer Y axis in g/second
-22 ACC Z            Accelerometer Z asis in g/second
-23 GYR X            Gyrometer X axis in g?
-24 GYR Y            Gyrometer Y axis in g?
-25 GYR Z            Gyrometer Z asis in g?
-26 MAG X            Magnetometer X axis in millidegrees
-27 MAG Y            Magnetometer Y axis in millidegrees
-28 MAG Z            Magnetometer Z axis in millidegrees
+20 ACC X            Accelerometer X axis in millig/second
+21 ACC Y            Accelerometer Y axis in millig/second
+22 ACC Z            Accelerometer Z asis in millig/second
+23 GYR X            Gyrometer X axis in millig?
+24 GYR Y            Gyrometer Y axis in millig?
+25 GYR Z            Gyrometer Z asis in millig?
+26 MAG X            Magnetometer X axis in millideg
+27 MAG Y            Magnetometer Y axis in millideg
+28 MAG Z            Magnetometer Z axis in millideg
 ``` 
 
 #### Sensor &#x1F4DF; processed
 ```
-30 MA               Current power draw in milliamperes
-31 AZ               Azimuth in millidegrees
-32 EL               Elevation in millidegrees
+30 POWER            Current power draw (milliamperes)
+31 TEMP             Temperature in centigree
+32 PITCH            Pitch (millidegrees)
+33 ROLL             Roll (millidegrees)
+34 YAW              Yaw (millidegrees)
 ```
 
 #### Program 50 &#x1F6F0;&#xFE0F; (Satellite tracker )

@@ -2,13 +2,16 @@
 Challenge accepted: Manufacture an mechatronic pan/tilt appliance to keep Yagi antennae toward targets like ... well - satellites &#x1F6F0;&#xFE0F; or elephants &#x1F418; passing along, depending on your taste and actual weather situation.
 
 ## Architecture
-As a hommage to the NASA Apollo program, the appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. It also features a so called "DSKY", a user interface consisting of a display and a keyboard - in this case a 4x4 button pad. The command strucuture follows a syntax consisting of numeric sequences.
+As a hommage to the NASA Apollo program, the appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. The command strucuture follows a syntax consisting of numeric sequences.
 
 ![Verb Noun List](./img/dsky.jpg)
 
 ## Electronics
 
-![DSKY Display](./img/display.jpeg)
+### Display
+For the DSKY (display and keyboard) module of the AGC, I make use of a 20x4 I2C LCD and a 4x4 Keypad. As I really do not like the looks of the keypad, I am considering to make my own capacitive touch thingy made from copper tape and laminated or somehow ... but this is a whole different story.
+
+![DSKY Display](./img/display.gif)
 
 ### Actuator
 - Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html

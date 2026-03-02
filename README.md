@@ -143,6 +143,21 @@ Home brew, based on AI results and online Yagi calculator, fine tuned with an [N
 <a name="antenna-70cm"></a>
 ### Yagi 7-Element 70cm Band &#x1F4E1;
 
+#### Dimensions
+The following dimensions are calculated based on the classic DL6WU design for 8mm aluminum elements mounted through or on a non-conductive PVC boom.
+
+```
+Element 	    Length      Pos on Boom     Spacing Prev
+--------------------------------------------------------
+Reflector (REF)	342 mm	    30 mm	        - 
+Radiator  (RAD)	327 mm	    175 mm	        145 mm
+Director 1 (D1)	310 mm	    230 mm	        55 mm
+Director 2 (D2)	304 mm	    365 mm	        135 mm
+Director 3 (D3)	299 mm	    535 mm	        170 mm
+Director 4 (D4)	295 mm	    735 mm	        200 mm
+Director 5 (D5)	291 mm	    960 mm	        225 mm
+```
+
 #### BOM
 - [ ] 1x 1000mm M25 PVC Tube
 - [ ] 2x M25 Cap

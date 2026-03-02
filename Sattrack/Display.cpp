@@ -3,7 +3,7 @@
 #include "Display.h"
 #include "Computer.h"
 
-Display::Display(uint8_t addr) : LiquidCrystal_I2C(addr, 20, 4) {}
+Display::Display(uint8_t addr, Computer* c) : _computer(c), LiquidCrystal_I2C(addr, 20, 4) {}
 
 void Display::backlight(bool o) {
     if (o) {
@@ -17,30 +17,21 @@ void Display::backlight(bool o) {
 }
 
 void Display::init() {
-    strcpy(this->_label[0], "MS");
-    strcpy(this->_label[1], "MS D");
-    strcpy(this->_label[2], "FF");
-    strcpy(this->_label[3], "LP");
-    strcpy(this->_label[4], "LPS");
-    strcpy(this->_label[5], "STATE");
-    strcpy(this->_label[6], "UX");
-    strcpy(this->_label[7], "DATE");
-    strcpy(this->_label[8], "TIME");
     LiquidCrystal_I2C::init();
     this->backlight(true);
 }
 
-void Display::print(Computer* c) {
-    if (c->mem[0] - this->_last < 200) return;
+void Display::print() {
+    if (this->mem(0) - this->_last < 200) return;
 
     snprintf(
         this->_line, 21, "%c%02d %c%02d %c        P%02d",
-        Computer::STATE_VERB == c->state && c->mem[2] ? ' ' : 'V',
-        c->verb,
-        Computer::STATE_NOUN == c->state && c->mem[2] ? ' ' : 'N',
-        c->noun,
-        Computer::STATE_ERROR == c->state ? 'E' : ' ',
-        c->prog
+        this->state(Computer::STATE_VERB) && this->flipflop() ? ' ' : 'V',
+        this->verb(),
+        this->state(Computer::STATE_NOUN) && this->flipflop() ? ' ' : 'N',
+        this->noun(),
+        this->state(Computer::STATE_ERROR) ? 'E' : ' ',
+        this->prog()
     );
 
     LiquidCrystal_I2C::setCursor(0, 0);
@@ -49,24 +40,24 @@ void Display::print(Computer* c) {
     for (this->_i = 0; this->_i < 3; this->_i++) {
         snprintf(this->_line, 21, "%20s", "");
 
-        if (Computer::STATE_IDLE == c->state && 1 <= c->verb && c->verb <= 3 && this->_i <= c->verb - 1) {
+        if (this->state(Computer::STATE_IDLE) && this->verb(1, 3) && this->_i <= this->verb() - 1) {
             snprintf(this->_line, 21, "%-8s%012u",
-                c->data == this->_i ? (c->mem[2] ? this->_label[c->noun + this->_i] : "") : this->_label[c->noun + this->_i], 
-                c->reg[this->_i]
+                this->label(this->noun() + this->_i), 
+                this->reg(this->_i)
             );
         }
 
-        if (Computer::STATE_IDLE == c->state && 11 <= c->verb && c->verb <= 13 && this->_i <= c->verb - 11) {
+        if (this->state(Computer::STATE_IDLE) && this->verb(11, 13) && this->_i <= this->verb() - 11) {
             snprintf(this->_line, 21, "%-8s%012u",
-                this->_label[c->noun + this->_i], 
-                c->reg[this->_i]
+                this->label(this->noun() + this->_i), 
+                this->reg(this->_i)
             );
         }
 
-        if (Computer::STATE_DATA == c->state && 21 <= c->verb && c->verb <= 23 && this->_i <= c->verb - 21) {
+        if (this->state(Computer::STATE_DATA) && this->verb(21, 23) && this->_i <= this->verb() - 21) {
             snprintf(this->_line, 21, "%-8s%012u",
-                this->_label[c->noun + this->_i], 
-                c->reg[this->_i]
+                this->data(this->_i) && this->flipflop() ? this->label(this->noun() + this->_i) : "", 
+                this->reg(this->_i)
             );
         }
 
@@ -74,5 +65,45 @@ void Display::print(Computer* c) {
         LiquidCrystal_I2C::print(this->_line);
     }
 
-    this->_last = c->mem[0];
+    this->_last = this->mem(0);
+}
+
+uint8_t Display::verb() {
+    return this->_computer->verb;
+}
+
+bool Display::verb(uint8_t l, uint8_t h) {
+    return l <= this->_computer->verb && this->_computer->verb <= h;
+}
+
+bool Display::data(uint8_t i) {
+    return this->_computer->data == i;
+}
+
+uint8_t Display::noun() {
+    return this->_computer->noun;
+}
+
+uint8_t Display::prog() {
+    return this->_computer->prog;
+}
+
+uint8_t Display::flipflop() {
+    return this->_computer->mem[2];
+}
+
+uint32_t Display::mem(uint8_t i) {
+    return this->_computer->mem[i];
+}
+
+uint32_t Display::reg(uint8_t i) {
+    return this->_computer->reg[i];
+}
+
+bool Display::state(uint8_t s) {
+    return this->_computer->state == s;
+}
+
+const char* Display::label(uint8_t i) {
+    return this->_computer->lbl[i];
 }

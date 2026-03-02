@@ -6,9 +6,11 @@
 #include "Clock.h"
 #include "Sensor.h"
 #include "Display.h"
+#include "Actuator.h"
 #include "Program.h"
 #include "Program50.h"
 
+class Actuator;
 class Display;
 class Program;
 
@@ -26,9 +28,10 @@ class Computer {
         STATE_ERROR,
     };
 
-    Clock clock = Clock();
-    Sensor sensor = Sensor();
+    Actuator actuator = Actuator();
     Program* program = nullptr;
+    Sensor sensor = Sensor();
+    Clock clock = Clock();
     uint32_t mem[100];
     uint32_t reg[3];
     uint32_t verb;
@@ -37,9 +40,14 @@ class Computer {
     uint8_t prompt;
     uint8_t state;
     uint8_t data;
+    char lbl[100][9];
 
     Computer();
 
+    const char* label(uint8_t i);
+    void label(uint8_t i, const char* v);
+
+    void init();
     void input();
     void handle(char input);
     void execute();

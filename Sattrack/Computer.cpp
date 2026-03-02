@@ -4,8 +4,23 @@
 #include "Program50.h"
 
 Computer::Computer() {
-    Serial.begin(9600);
+}
 
+void Computer::init() {
+    Serial.begin(115200);
+
+    this->clock.init();
+    this->actuator.init();
+
+    this->label(0, "MS");
+    this->label(1, "MS D");
+    this->label(2, "FF");
+    this->label(3, "LP");
+    this->label(4, "LPS");
+    this->label(5, "STATE");
+    this->label(6, "UX");
+    this->label(7, "DATE");
+    this->label(8, "TIME");
 }
 
 void Computer::input() {
@@ -101,7 +116,12 @@ void Computer::execute() {
             this->data = 0;
             return;
 
-        // todo: 32
+        case 32:
+            if (nullptr != this->program) {
+                this->program->init();
+            }
+
+            return;
 
         case 34:
             if (nullptr != this->program) {
@@ -120,6 +140,7 @@ void Computer::execute() {
             switch (this->noun) {
                 case 50:
                     this->program = new Program50(this);
+                    this->program->init();
                     break;
                 
                 default:
@@ -142,12 +163,13 @@ void Computer::execute() {
 
 void Computer::process() {
     if (this->program == nullptr) return;
+
     this->program->process();
 
-    if (this->program->complete()) {
+    if (this->program->complete) {
         delete this->program;
         this->program = nullptr;
-        // this->prog = 0;
+        this->prog = 0;
     }
 }
 
@@ -196,5 +218,13 @@ void Computer::update() {
 }
 
 void Computer::refresh(Display* display) {
-    display->print(this);
+    display->print();
+}
+
+const char* Computer::label(uint8_t i) {
+    return this->lbl[i];
+}
+
+void Computer::label(uint8_t i, const char* l) {
+    strcpy(this->lbl[i], l);
 }

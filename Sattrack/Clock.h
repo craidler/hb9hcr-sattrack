@@ -13,6 +13,7 @@ class Clock {
     uint32_t time();
     uint32_t ux();
     uint32_t ux(uint32_t date, uint32_t time);
+    void init();
     void set(uint32_t ux);
     void set(uint32_t date, uint32_t time);
 };

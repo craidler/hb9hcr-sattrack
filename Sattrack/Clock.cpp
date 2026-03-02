@@ -1,8 +1,12 @@
 #include <RTC.h>
 #include "Clock.h"
 
-Clock::Clock() {
+Clock::Clock() {}
+
+void Clock::init() {
     RTC.begin();
+    RTCTime startTime(30, Month::JUNE, 2023, 13, 37, 00, DayOfWeek::WEDNESDAY, SaveLight::SAVING_TIME_ACTIVE);
+    RTC.setTime(startTime);
     this->set(20260301, 120000);
 }
 

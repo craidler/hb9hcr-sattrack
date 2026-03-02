@@ -7,7 +7,6 @@ As a hommage to the NASA Apollo program, the appliance is controlled in the mann
 ![Verb Noun List](./img/dsky.jpg)
 
 ## Electronics
-All the modules are wrapped into a `struct` which also contains there state and scrubbing variables. This way I prevent memory stack churn through leveraging shared scrubbing variables. The display runs at 5Hz refresh rate. All sensor data is pulled at 12.5Hz
 
 ![DSKY Display](./img/display.jpeg)
 
@@ -21,6 +20,8 @@ All the modules are wrapped into a `struct` which also contains there state and 
 - [Yagi 3-Element 2m Band](#antenna-2m) (home brew)
 
 ### Sensor
+For sensing the orientation of the appliance I use Arduinos Library implementing the [Madgwick Filter](https://ahrs.readthedocs.io/en/latest/filters/madgwick.html) and wrap sensor class to combine the following sensors:
+
 - I2C BMM350 Triple-Axis Magnetometer https://www.dfrobot.com/product-2874.html
 - I2C BMI160 6-Axis IMU https://www.dfrobot.com/product-1716.html
 - I2C Digital Wattmeter https://www.dfrobot.com/product-1827.html
@@ -104,11 +105,13 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 
 #### Sensor &#x1F4DF; processed
 ```
-30 POWER            Current power draw (milliamperes)
-31 TEMP             Temperature in centigree
-32 PITCH            Pitch (millidegrees)
-33 ROLL             Roll (millidegrees)
-34 YAW              Yaw (millidegrees)
+30 VOLT             voltage (millivolt)
+31 CURR             current (milliampere)
+32 POWR             power (milliwatt)
+33 TEMP             temperature (centigree)
+34 PITCH            pitch (millidegrees)
+35 ROLL             roll (millidegrees)
+36 YAW              yaw (millidegrees)
 ```
 
 #### Program 50 &#x1F6F0;&#xFE0F; (Satellite tracker )

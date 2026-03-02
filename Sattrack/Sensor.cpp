@@ -30,6 +30,10 @@ bool Sensor::read() {
     this->data[8] = mag.float_y;
     this->data[9] = mag.float_temperature;
 
+    this->data[10] = this->_ina219.getBusVoltage_V();
+    this->data[11] = this->_ina219.getCurrent_mA();
+    this->data[12] = this->_ina219.getPower_mW();
+
     this->_filter.update(this->data[3], this->data[4], this->data[5], this->data[0], this->data[1], this->data[2], this->data[6], this->data[7], this->data[8]);
     this->pitch = this->_filter.getPitch();
     this->roll = this->_filter.getRoll();

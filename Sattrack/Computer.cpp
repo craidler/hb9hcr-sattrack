@@ -165,10 +165,13 @@ void Computer::update() {
         this->mem[27] = this->sensor.data[7] * 1000;
         this->mem[28] = this->sensor.data[8] * 1000;
         // processed
-        this->mem[31] = this->sensor.data[9];
-        this->mem[32] = this->sensor.pitch * 1000;
-        this->mem[33] = this->sensor.roll * 1000;
-        this->mem[34] = this->sensor.yaw * 1000;
+        this->mem[30] = this->sensor.data[10];
+        this->mem[31] = this->sensor.data[11];
+        this->mem[32] = this->sensor.data[12];
+        this->mem[33] = this->sensor.data[9];
+        this->mem[34] = this->sensor.pitch * 1000;
+        this->mem[35] = this->sensor.roll * 1000;
+        this->mem[36] = this->sensor.yaw * 1000;
     }
 
     // monitor

@@ -143,6 +143,8 @@ Home brew, based on AI results and online Yagi calculator, fine tuned with an [N
 <a name="antenna-70cm"></a>
 ### Yagi 7-Element 70cm Band &#x1F4E1;
 
+![Yagi 70cm Band Radiator](./img//yagi-radiator-70cm.jpeg)
+
 #### Dimensions
 The following dimensions are calculated based on the classic DL6WU design for 8mm aluminum elements mounted through or on a non-conductive PVC boom.
 
@@ -161,17 +163,18 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 #### BOM
 - [ ] 1x 1000mm M25 PVC Tube
 - [ ] 2x M25 Cap
-- [ ] 1x 70mm M25 PVC Tube (Choke)
+- [ ] 1x 35mm M25 PVC Tube (Choke, 5 windings, 5.5mm holes)
 - [ ] 9x M25 PVC Clamp
 - [ ] 4x 1000mm 8mm Aluminum Tube
 - [ ] 14x 8mm Cap
-- [ ] 1x 100mm 10mm Acrylic Tube (Radiator Connector)
+- [ ] 1x 105mm 12mm Acrylic Tube (Radiator Connector, 5mm Gap)
+- [ ] 50mm Duct Tape
 - [ ] 2x M4x6mm (Feedpoints)
 - [ ] 4x Ring Terminal 4mm (Coax + Beta Match)
 - [ ] 1x 100mm 1.5mm<sup>2</sup> Copper Wire (Coil Beta Match)
 - [ ] 1x Case?
 - [ ] 2x Grommet (Radiator)
-- [ ] 1x RG58 ?
+- [ ] 1x Aircell-5
 - [ ] 1x PL Female
 
 <a name="antenna-2m"></a>
@@ -180,16 +183,17 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 #### BOM
 - [ ] 1x 1000mm M25 PVC Tube
 - [ ] 2x M25 Cap
-- [ ] 1x 70mm M25 PVC Tube (Choke)
+- [ ] 1x 35mm M25 PVC Tube (Choke, 5 windings, 5.5mm holes)
 - [ ] 5x M25 PVC Clamp
 - [ ] 4x 1000mm 8mm Aluminum Tube
 - [ ] 1x 1000mm 10mm Aluminum Tube (Reflector Connector)
 - [ ] 6x 8mm Cap
-- [ ] 1x 100mm 10mm Acrylic Tube (Radiator Connector)
+- [ ] 1x 105mm 12mm Acrylic Tube (Radiator Connector, 5mm Gap)
+- [ ] 50mm Duct Tape
 - [ ] 4x M4x6mm (Feedpoint + Reflector Connector)
 - [ ] 4x Ring Terminal 4mm (Coax + Beta Match)
 - [ ] 1x 100mm 1.5mm<sup>2</sup> Copper Wire (Coil Beta Match)
 - [ ] 1x Case?
 - [ ] 2x Grommet (Radiator)
-- [ ] 1x RG58 ?
+- [ ] 1x Aircell-5
 - [ ] 1x PL Female

@@ -4,7 +4,7 @@ Challenge accepted: Manufacture an mechatronic pan/tilt appliance to keep Yagi a
 ## Architecture
 As a hommage to the NASA Apollo program, the appliance is controlled in the manner of the Apollo Guidance Computer with servos as output and sensors as input. The command strucuture follows a syntax consisting of numeric sequences.
 
-![Verb Noun List](./img/dsky.jpg)
+<img src="./img/dsky.jpg" alt="DSKY Apollo" width="100%">
 
 ## Electronics
 

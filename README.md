@@ -55,20 +55,20 @@ A `verb` is entered first in the sentence, followed by a `noun`. Together both f
 
 #### Reserved
 ```
-00                  not in use
-01                  display NOUN
-02                  display NOUN, NOUN+1
-03                  display NOUN, NOUN+2, NOUN+3
+00                  -
+01                  display N
+02                  display N, N+1
+03                  display N, N+2, N+3
 .
 .
-11                  monitor NOUN
-12                  monitor NOUN, NOUN+1
-13                  monitor NOUN, NOUN+1, NOUN+2
+11                  monitor N
+12                  monitor N, N+1
+13                  monitor N, N+1, N+2
 .
 .
-21                  load NOUN
-22                  load NOUN, NOUN+1
-23                  load NOUN, NOUN+1, NOUN+2
+21                  load N
+22                  load N, N+1
+23                  load N, N+1, N+2
 .
 .
 32                  recycle program
@@ -83,38 +83,42 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 #### System &#x2699;
 ```
 00 MS               millisecond
-01 MS D             millisecond delta
+01 DT               microsecond delta
 02 FF               flip-flop
 03 LP               loop count
-04 LPS              loops per second
+04 HZ               Hertz           loop/second
 05 STATE            state
 06 UX               unix timestamp
 07 DATE             date
 08 TIME             time
+.
+10 BMI160           disable BMI160
+11 BMM350           disable BMM350
+12 INA219           disable INA219
 ```
 
 #### Sensor &#x1F4DF; raw
 ```
-20 ACC X            acc x           millig/second
-21 ACC Y            acc y           millig/second
-22 ACC Z            acc z           millig/second
-23 GYR X            gyr x           millig
-24 GYR Y            gyr y           millig
-25 GYR Z            gyr z           millig
-26 MAG X            mag x           microtesla
-27 MAG Y            mag y           microtesla
-28 MAG Z            mag z           microtesla
+20 ACC X            acc x           millig/second   BMI160
+21 ACC Y            acc y           millig/second   BMI160
+22 ACC Z            acc z           millig/second   BMI160
+23 GYR X            gyr x           millig          BMI160
+24 GYR Y            gyr y           millig          BMI160
+25 GYR Z            gyr z           millig          BMI160
+26 MAG X            mag x           microtesla      BMM350
+27 MAG Y            mag y           microtesla      BMM350
+28 MAG Z            mag z           microtesla      BMM350
 ``` 
 
 #### Sensor &#x1F4DF; processed
 ```
-30 VOLT             voltage         millivolt
-31 CURR             current         milliampere
-32 POWR             power           milliwatt
-33 TEMP             temperature     centigree
-34 PITCH            pitch           millidegrees
-35 ROLL             roll            millidegrees
-36 YAW              yaw             millidegrees
+30 VBUS             voltage bus     millivolt       INA219
+31 VSHNT            voltage shunt   millivolt       INA219
+32 CURR             current         milliampere     INA219
+33 POWR             power           milliwatt       INA219
+34 TEMP             temperature     centigree       BMM350
+35 AZ               azimuth         degrees         BMI160
+36 EL               elevation       degrees         BMM350
 ```
 
 #### Program 50 &#x1F6F0;&#xFE0F; (Satellite tracker )

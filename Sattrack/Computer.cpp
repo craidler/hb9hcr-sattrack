@@ -10,6 +10,7 @@ void Computer::init() {
     Serial.begin(115200);
 
     this->clock.init();
+    this->sensor.init();
     this->actuator.init();
 
     this->label(0, "MS");
@@ -192,15 +193,15 @@ void Computer::update() {
 
     if (this->sensor.read()) {
         // raw
-        this->mem[20] = this->sensor.data[0] * 1000;
-        this->mem[21] = this->sensor.data[1] * 1000;
-        this->mem[22] = this->sensor.data[2] * 1000;
-        this->mem[23] = this->sensor.data[3] * 1000;
-        this->mem[24] = this->sensor.data[4] * 1000;
-        this->mem[25] = this->sensor.data[5] * 1000;
-        this->mem[26] = this->sensor.data[6] * 1000;
-        this->mem[27] = this->sensor.data[7] * 1000;
-        this->mem[28] = this->sensor.data[8] * 1000;
+        this->mem[20] = this->sensor.data[0];
+        this->mem[21] = this->sensor.data[1];
+        this->mem[22] = this->sensor.data[2];
+        this->mem[23] = this->sensor.data[3];
+        this->mem[24] = this->sensor.data[4];
+        this->mem[25] = this->sensor.data[5];
+        this->mem[26] = round(this->sensor.data[6]);
+        this->mem[27] = round(this->sensor.data[7]);
+        this->mem[28] = round(this->sensor.data[8]);
         // processed
         this->mem[30] = this->sensor.data[10];
         this->mem[31] = this->sensor.data[11];

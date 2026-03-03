@@ -5,14 +5,15 @@ Sensor::Sensor() {
 }
 
 void Sensor::init() {
-    this->_bmi160.I2cInit(0x68);
-    this->_bmm350.begin();
+    if (!this->_bmi160.I2cInit(0x69)) Serial.println("BMI160 fail");
+    if (!this->_bmm350.begin()) Serial.println("BMM350 fail");
+    this->_bmm350.setMeasurementXYZ();
 }
 
 bool Sensor::read() {
-    this->_current = micros();
-    this->_dt = (this->_current - this->_last) / 1000000;
-    if (this->_dt < .00001) return false;
+    this->_current = millis();
+    this->_dt = (this->_current - this->_last);
+    if (this->_dt < 100) return false;
     this->_last = this->_current;
     
     if (0 == this->_bmi160.getAccelGyroData(this->data)) {
@@ -25,19 +26,23 @@ bool Sensor::read() {
     }
 
     sBmm350MagData_t mag = this->_bmm350.getGeomagneticData();
-    this->data[6] = mag.float_x;        
-    this->data[7] = mag.float_y;        
-    this->data[8] = mag.float_y;
+    this->data[6] = mag.x;        
+    this->data[7] = mag.y;        
+    this->data[8] = mag.z;
     this->data[9] = mag.float_temperature;
 
+    /*
     this->data[10] = this->_ina219.getBusVoltage_V();
     this->data[11] = this->_ina219.getCurrent_mA();
     this->data[12] = this->_ina219.getPower_mW();
+    */
 
+    /*
     this->_filter.update(this->data[3], this->data[4], this->data[5], this->data[0], this->data[1], this->data[2], this->data[6], this->data[7], this->data[8]);
     this->pitch = this->_filter.getPitch();
     this->roll = this->_filter.getRoll();
     this->yaw = this->_filter.getYaw();
+    */
 
     return true;
 }

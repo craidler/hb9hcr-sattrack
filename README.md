@@ -101,9 +101,9 @@ Together with a preceeding `verb`, the `noun` forms a command to be executed by 
 23 GYR X            gyr x           millig
 24 GYR Y            gyr y           millig
 25 GYR Z            gyr z           millig
-26 MAG X            mag x           millideg
-27 MAG Y            mag y           millideg
-28 MAG Z            mag z           millideg
+26 MAG X            mag x           microtesla
+27 MAG Y            mag y           microtesla
+28 MAG Z            mag z           microtesla
 ``` 
 
 #### Sensor &#x1F4DF; processed

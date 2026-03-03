@@ -10,7 +10,7 @@ class Sensor {
    private:
     DFRobot_BMI160 _bmi160 = DFRobot_BMI160();
     DFRobot_BMM350_I2C _bmm350 = DFRobot_BMM350_I2C(&Wire, 0x14);
-    DFRobot_INA219_IIC _ina219 = DFRobot_INA219_IIC(&Wire, 0x40);
+    // DFRobot_INA219_IIC _ina219 = DFRobot_INA219_IIC(&Wire, 0x40);
     Madgwick _filter;
     uint32_t _current;
     uint32_t _last;

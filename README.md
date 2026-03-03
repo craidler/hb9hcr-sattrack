@@ -11,7 +11,7 @@ As a hommage to the NASA Apollo program, the appliance is controlled in the mann
 ### Display
 For the DSKY (display and keyboard) module of the AGC, I make use of a 20x4 I2C LCD and a 4x4 Keypad. As I really do not like the looks of the keypad, I am considering to make my own capacitive touch thingy made from copper tape and laminated or somehow ... but this is a whole different story.
 
-![DSKY Display](./img/display.gif)
+<img src="./img/display.gif" alt="DSKY Display" width="100%">
 
 ### Actuator
 - Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html

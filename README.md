@@ -144,6 +144,7 @@ Home brew, based on AI results and online Yagi calculator, fine tuned with an [N
 ### Yagi 7-Element 70cm Band &#x1F4E1;
 
 ![Yagi 70cm Band Radiator](./img//yagi-radiator-70cm.jpeg)
+This is what my rapid prototyping brought out of a radiator. I duct-taped the aluminum tubes (50mm) just a bit so they fit into the acrylic tube (105mm) neatly and the result is a 5mm gap. Then I drilled 3.5mm holes 15mm apart and tapped M4 threads. For final assembly I will use conductive gel for the stainless steel screws through a lock-washer (to bite into the acryl), washer, two ring terminals and another washer on top. For the beta match I used a 100mm 1.5mm<sup>2</sup> wire and 2 windings around the aluminum tube.
 
 #### Dimensions
 The following dimensions are calculated based on the classic DL6WU design for 8mm aluminum elements mounted through or on a non-conductive PVC boom.
@@ -151,9 +152,9 @@ The following dimensions are calculated based on the classic DL6WU design for 8m
 ```
 Element 	    Length      Pos on Boom     Spacing Prev
 --------------------------------------------------------
-Reflector (REF)	342 mm	    30 mm	        - 
+Reflector (REF)	342 mm	     30 mm	        - 
 Radiator  (RAD)	327 mm	    175 mm	        145 mm
-Director 1 (D1)	310 mm	    230 mm	        55 mm
+Director 1 (D1)	310 mm	    230 mm	         55 mm
 Director 2 (D2)	304 mm	    365 mm	        135 mm
 Director 3 (D3)	299 mm	    535 mm	        170 mm
 Director 4 (D4)	295 mm	    735 mm	        200 mm
@@ -169,7 +170,7 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 - [ ] 14x 8mm Cap
 - [ ] 1x 105mm 12mm Acrylic Tube (Radiator Connector, 5mm Gap)
 - [ ] 50mm Duct Tape
-- [ ] 2x M4x6mm (Feedpoints)
+- [ ] 2x M4x8mm (Feedpoints)
 - [ ] 4x Ring Terminal 4mm (Coax + Beta Match)
 - [ ] 1x 100mm 1.5mm<sup>2</sup> Copper Wire (Coil Beta Match)
 - [ ] 1x Case?
@@ -190,7 +191,7 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 - [ ] 6x 8mm Cap
 - [ ] 1x 105mm 12mm Acrylic Tube (Radiator Connector, 5mm Gap)
 - [ ] 50mm Duct Tape
-- [ ] 4x M4x6mm (Feedpoint + Reflector Connector)
+- [ ] 4x M4x8mm (Feedpoint + Reflector Connector)
 - [ ] 4x Ring Terminal 4mm (Coax + Beta Match)
 - [ ] 1x 100mm 1.5mm<sup>2</sup> Copper Wire (Coil Beta Match)
 - [ ] 1x Case?

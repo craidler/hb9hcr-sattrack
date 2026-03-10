@@ -38,10 +38,9 @@ void setup() {
     Sensor.begin();
     Sensor.read();
     Actuator.begin();
-    Actuator.home(Sensor.az_degree, Sensor.el_degree);
-    delay(500);
-    Actuator.move(0, 90);
-    Actuator.move(0, -22.5);
+    Actuator.home(0, Sensor.el_degree);
+    Actuator.move(45, 45);
+    Actuator.move(325, -45);
     Actuator.move(0, 0);
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -53,10 +52,8 @@ void setup() {
         Sensor.read();
 
         String json = "{";
-        json += "\"az_deg\":" + String(Sensor.az_degree) + ",";
-        json += "\"az_pos\":" + String(Actuator.az_position) + ",";
-        json += "\"el_deg\":" + String(Sensor.el_degree) + ",";
-        json += "\"el_pos\":" + String(Actuator.el_position) + ",";
+        json += "\"az_current\":" + String(Actuator.az_current) + ",";
+        json += "\"el_current\":" + String(Actuator.el_current) + ",";
         json += "\"eol\":\"1\"}";
 
         request->send(200, "application/json", json);
@@ -69,13 +66,13 @@ void loop() {
     Actuator.read();
     Sensor.read();
 
-    Serial.printf("az_deg: %.2f° az_offset: %.2f° az_pos: %u el_deg: %.2f° el_offset: %.2f° el_pos: %u\n",
+    Serial.printf("az_deg: %.2f° az_offset: %.2f° az_pos: %.2f° el_deg: %.2f° el_offset: %.2f° el_pos: %.2f°\n",
                   Sensor.az_degree,
                   Actuator.az_offset,
-                  Actuator.az_position,
+                  Actuator.az_current,
                   Sensor.el_degree,
                   Actuator.el_offset,
-                  Actuator.el_position);
+                  Actuator.el_current);
 
     // RTC.read();
     // Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);

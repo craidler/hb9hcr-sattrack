@@ -12,10 +12,10 @@ class HB9HCR_Actuator {
     SMS_STS Servo;
 
    public:
-    uint16_t az_center = 2047;
-    uint32_t az_position = 0;
     uint16_t el_center = 1023;
     uint32_t el_position = 0;
+    float az_current = 0;
+    float el_current = 0;
     float az_offset = 0;
     float el_offset = 0;
 
@@ -78,23 +78,31 @@ class HB9HCR_Actuator {
     }
 
     void home(float az, float el) {
+        this->az_current = az;
+        this->el_current = el;
         this->el_offset = -el;
-        this->az_offset = -az;
         this->move(0.0f, 0.0f);
     }
 
     void move(float az, float el) {
-        uint16_t az_target = constrain(this->az_center + (this->az_offset + az) * this->spd, 0, 4095);
-        uint16_t el_target = constrain(this->el_center + (this->el_offset + el) * this->spd, 0, 2047);
+        Servo.WritePosEx(HB9HCR_AXIS_AZ, constrain(this->shortest(this->az_current, az) * this->spd, -4095.0, 4095.0), 0, 25);
+        Servo.WritePosEx(HB9HCR_AXIS_EL, constrain(this->el_center + (this->el_offset + el) * this->spd, 0, 2047), 0, 25);
 
-        // Servo.WritePosEx(HB9HCR_AXIS_AZ, az_target, 0, 25);
-        Servo.WritePosEx(HB9HCR_AXIS_EL, el_target, 0, 25);
+        this->az_current = az;
+        this->el_current = el;
         delay(1000);
     }
 
     void read() {
-        this->el_position = Servo.ReadPos(HB9HCR_AXIS_EL);
-        this->az_position = Servo.ReadPos(HB9HCR_AXIS_AZ);
+        // this->el_position = Servo.ReadPos(HB9HCR_AXIS_EL);
+        // this->az_position = Servo.ReadPos(HB9HCR_AXIS_AZ);
+    }
+
+    float shortest(float current, float target) {
+        float diff = target - current;
+        while (diff <= -180) diff += 360;
+        while (diff > 180) diff -= 360;
+        return diff;
     }
 };
 

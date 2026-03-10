@@ -1,13 +1,13 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
 
-Prototype Mk2
+With Prototype Mk2, I managed to control both servos in different modes. Azimuth is in relative (3), elevation in absolute (0) mode. Both axis can be "homed" at any given time. Elevation currently takes initial angle from the frame IMU and translates this to an offset of the center position (2023). Azimuth takes the "short path". Demo moves azimuth 0,45,325,0°, elevation 0,45,-45,0°.
 
-![Prototype Mk2](./img/prototype-mk2.gif)
+<img src="./img/prototype-mk2.gif" width="100%">
 
 ### Actuator
-- Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html
-- Servo Azimuth (tbd)
-- Servo Elevation (tbd)
+- UART Servo Driver Board https://www.dfrobot.com/product-3002.html
+- ST3020 Servo Azimuth https://www.waveshare.com/wiki/ST3020_Servo
+- ST3020 Servo Elevation https://www.waveshare.com/wiki/ST3020_Servo
 
 ### Antenna
 - [Yagi 7-Element 70cm Band](#antenna-70cm) (home brew)

@@ -1,5 +1,9 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
 
+Prototype Mk2
+
+![Prototype Mk2](./img/prototype-mk2.gif)
+
 ### Actuator
 - Serial Bus Servo Driver Board https://www.dfrobot.com/product-3002.html
 - Servo Azimuth (tbd)

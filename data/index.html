@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BMM350 Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: monospace; text-align: left; padding: 1rem; background: #333; color: #fff; }
+        td { min-width: 75px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>Azimuth</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Sensor</td>
+                    <td>
+                        <span id="az_deg">0</span>
+                        <span>&deg;</span>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Servo</td>
+                    <td>
+                        <span id="az_pos">0</span>
+                    </td>
+                    <td>
+                        <input type="number" min="1023" max="2047" step="1">
+                        <button type="button">set</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <h3>Elevation</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <td>Sensor</td>
+                    <td>
+                        <span id="el_deg">0</span>
+                        <span>&deg;</span>
+                    </td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Servo</td>
+                    <td>
+                        <span id="el_pos">0</span>
+                    </td>
+                    <td>
+                        <input type="number" min="-4096" max="4096" step="1">
+                        <button type="button">set</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        setInterval(function() {
+            fetch('/data').then(response => response.json()).then(data => {
+                document.getElementById('az_deg').innerText = data.az_deg.toFixed(2);
+                document.getElementById('az_pos').innerText = data.az_pos.toFixed(0);
+                document.getElementById('el_deg').innerText = data.el_deg.toFixed(2);
+                document.getElementById('el_pos').innerText = data.el_pos.toFixed(0);
+            });
+        }, 1000); // 5Hz update rate
+    </script>
+</body>
+</html>

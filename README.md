@@ -1,10 +1,10 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
 
-With Prototype Mk2, I managed to control both servos in different modes. Azimuth is in relative (3), elevation in absolute (0) mode. Both axis can be "homed" at any given time. Elevation currently takes initial angle from the frame IMU and translates this to an offset of the center position (2023). Azimuth takes the "short path". Demo moves azimuth 0,45,315,0°, elevation 0,45,-45,0°.
+With Prototype Mk2, I managed to control both servos in different modes. Azimuth is in relative (3), elevation in absolute (0) mode. Both axis can be "homed" at any given time. Elevation currently takes initial angle from the frame IMU and translates this to an offset of the center position (2023). Azimuth takes the "short path".
 
 <img src="./img/prototype-mk2.gif" width="100%">
 
-The device features a webserver which serves a command page over WiFi. Clicking the buttons commands the axis servos to move to the chosen position.
+The device features a webserver which serves a command page over WiFi. Clicking the buttons commands the axis servos to move to the chosen position or in increments of positive/negative 1 or 10 degrees.
 
 <img src="./img/ui.png" width="100%">
 

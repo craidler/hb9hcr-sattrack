@@ -9,6 +9,7 @@
 
 const char* ssid = "YOUR_SSID";
 const char* pass = "YOUR_PASSWORD";
+char datetime[20];
 
 AsyncWebServer Server(80);
 HB9HCR_Actuator Actuator;
@@ -39,6 +40,7 @@ void setup() {
     Sensor.read();
     Actuator.begin();
     Actuator.home(0, Sensor.el_degree);
+    Actuator.move(0, 0);
     Actuator.move(45, 45);
     Actuator.move(315, -45);
     Actuator.move(0, 0);
@@ -56,15 +58,15 @@ void setup() {
     });
 
     Server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
-        Actuator.read();
+        snprintf(datetime, 20, "%04d-%02d-%02d %02d:%02d:%02d", RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);
         Sensor.read();
 
         String json = "{";
-        json += "\"az_axis\":" + String(Actuator.az_current) + ",";
+        json += "\"az_axis\":" + String(Actuator.az_degree) + ",";
         json += "\"az_sensor\":" + String(Sensor.az_degree) + ",";
-        json += "\"el_axis\":" + String(Actuator.el_current) + ",";
+        json += "\"el_axis\":" + String(Actuator.el_degree) + ",";
         json += "\"el_sensor\":" + String(Sensor.el_degree) + ",";
-        json += "\"eol\":\"1\"}";
+        json += "\"datetime\":\"" + String(datetime) + "\"}";
 
         request->send(200, "application/json", json);
     });
@@ -76,27 +78,15 @@ void setup() {
         request->send(200, "application/json" "{}");
     });
 
+    Server.on("/step", HTTP_GET, [](AsyncWebServerRequest* request) {
+        if (!request->hasParam("axis") || !request->hasParam("step")) return;
+        if (0 == request->getParam("axis")->value().compareTo("az")) Actuator.stepAz(request->getParam("step")->value().toInt());
+        if (0 == request->getParam("axis")->value().compareTo("el")) Actuator.stepEl(request->getParam("step")->value().toInt());
+        request->send(200, "application/json" "{}");
+    });
+
     Server.begin();
 }
 
 void loop() {
-    Actuator.read();
-    Sensor.read();
-
-    Serial.printf("az pos: %d el pos: %d\n", Actuator.az_position, Actuator.el_position);
-
-    /*
-    Serial.printf("az_deg: %.2f° az_offset: %.2f° az_pos: %.2f° el_deg: %.2f° el_offset: %.2f° el_pos: %.2f°\n",
-                  Sensor.az_degree,
-                  Actuator.az_offset,
-                  Actuator.az_current,
-                  Sensor.el_degree,
-                  Actuator.el_offset,
-                  Actuator.el_current);
-                  */
-
-    // RTC.read();
-    // Serial.printf("%04d-%02d-%02d %02d:%02d:%02d\n", RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);
-
-    delay(1000);
 }

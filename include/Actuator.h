@@ -13,11 +13,14 @@ class HB9HCR_Actuator {
 
    public:
     uint16_t el_center = 1023;
-    uint32_t el_position = 0;
+    int az_position = 0;
+    int el_position = 0;
     float az_current = 0;
     float el_current = 0;
     float az_offset = 0;
     float el_offset = 0;
+    bool az_moving = false;
+    bool el_moving = false;
 
     HB9HCR_Actuator() {}
 
@@ -84,18 +87,38 @@ class HB9HCR_Actuator {
         this->move(0.0f, 0.0f);
     }
 
+    void moveAz(float t) {
+        if (this->az_moving) return;
+        this->az_moving = true;
+        Servo.WritePosEx(HB9HCR_AXIS_AZ, constrain(this->shortest(this->az_current, t) * this->spd, -4095.0, 4095.0), 0, 25);
+        delay(1000);
+        this->az_current = t;
+        this->az_moving = false;
+    }
+
+    void moveEl(float t) {
+        if (this->el_moving) return;
+        this->el_moving = true;
+        Servo.WritePosEx(HB9HCR_AXIS_EL, constrain(this->el_center + (this->el_offset + t) * this->spd, 0, 2047), 0, 25);
+        delay(1000);
+        this->el_current = t;
+        this->el_moving = false;
+    }
+
     void move(float az, float el) {
+        if (this->az_moving || this->el_moving) return;
+        this->az_moving = this->el_moving = true;
         Servo.WritePosEx(HB9HCR_AXIS_AZ, constrain(this->shortest(this->az_current, az) * this->spd, -4095.0, 4095.0), 0, 25);
         Servo.WritePosEx(HB9HCR_AXIS_EL, constrain(this->el_center + (this->el_offset + el) * this->spd, 0, 2047), 0, 25);
-
+        delay(1000);
         this->az_current = az;
         this->el_current = el;
-        delay(1000);
+        this->az_moving = this->el_moving = false;
     }
 
     void read() {
-        // this->el_position = Servo.ReadPos(HB9HCR_AXIS_EL);
-        // this->az_position = Servo.ReadPos(HB9HCR_AXIS_AZ);
+        this->el_position = Servo.ReadPos(HB9HCR_AXIS_EL);
+        this->az_position = Servo.ReadPos(HB9HCR_AXIS_AZ);
     }
 
     float shortest(float current, float target) {

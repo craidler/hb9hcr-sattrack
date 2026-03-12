@@ -6,7 +6,7 @@ With Prototype Mk2, I managed to control both servos in different modes. Azimuth
 
 The device features a webserver which serves a command page over WiFi. Clicking the buttons commands the axis servos to move to the chosen position or in increments of positive/negative 1 or 10 degrees.
 
-<img src="./img/ui.png" width="100%">
+<img src="./img/ui.png" alt="ui" width="100%">
 
 ### Actuator
 - UART Servo Driver Board https://www.dfrobot.com/product-3002.html

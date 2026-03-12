@@ -1,11 +1,13 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
-#include <GravityRtc.h>
 #include <LittleFS.h>
 #include <WiFi.h>
+#include <time.h>
 
 #include "Actuator.h"
+#include "Tracker.h"
 #include "Sensor.h"
+#include "Clock.h"
 
 const char* ssid = "YOUR_SSID";
 const char* pass = "YOUR_PASSWORD";
@@ -13,8 +15,9 @@ char datetime[20];
 
 AsyncWebServer Server(80);
 HB9HCR_Actuator Actuator;
+HB9HCR_Tracker Tracker;
 HB9HCR_Sensor Sensor;
-GravityRtc RTC;
+HB9HCR_Clock Clock;
 
 void setup() {
     Serial.begin(115200);
@@ -23,27 +26,22 @@ void setup() {
     }
 
     if (!LittleFS.begin()) {
-        Serial.println("LittleFS failed");
+        Serial.println("littlefs: failed");
     }
 
-    Serial.println("LitlFS mounted");
-
-    RTC.setup();
-    // RTC.adjustRtc(F(__DATE__), F(__TIME__));
+    Serial.println("littlefs: mounted");
 
     WiFi.softAP(ssid, pass);
-    Serial.print("WiFiIP ");
+    Serial.print("wifi: access point at ");
     Serial.println(WiFi.softAPIP());
 
-    delay(1000);
+    Clock.begin();
+
     Sensor.begin();
-    Sensor.read();
-    Actuator.begin();
-    Actuator.home(0, Sensor.el_degree);
-    Actuator.move(0, 0);
-    Actuator.move(45, 45);
-    Actuator.move(315, -45);
-    Actuator.move(0, 0);
+    Actuator.begin(&Server);
+
+    Sensor.calibrate(&Actuator);
+   
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(LittleFS, "/index.html", "text/html");
@@ -58,35 +56,30 @@ void setup() {
     });
 
     Server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
-        snprintf(datetime, 20, "%04d-%02d-%02d %02d:%02d:%02d", RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);
+        String dt;
+        time_t t;
+        Clock.datetime(dt);
+        time(&t);
         Sensor.read();
 
         String json = "{";
-        json += "\"az_axis\":" + String(Actuator.az_degree) + ",";
-        json += "\"az_sensor\":" + String(Sensor.az_degree) + ",";
-        json += "\"el_axis\":" + String(Actuator.el_degree) + ",";
-        json += "\"el_sensor\":" + String(Sensor.el_degree) + ",";
-        json += "\"datetime\":\"" + String(datetime) + "\"}";
-
+        json += "\"az_axis\":" + String(Actuator.degree[0]) + ",";
+        json += "\"az_sensor\":" + String(Sensor.degree[0]) + ",";
+        json += "\"el_axis\":" + String(Actuator.degree[1]) + ",";
+        json += "\"el_sensor\":" + String(Sensor.degree[1]) + ",";
+        json += "\"datetime\":\"" + String(dt.c_str()) + "\"}";
+        json += "\"timestamp\":\"" + String(t) + "\"}";
         request->send(200, "application/json", json);
+
+        Serial.println(json);
     });
 
-    Server.on("/move", HTTP_GET, [](AsyncWebServerRequest* request) {
-        if (!request->hasParam("axis") || !request->hasParam("target")) return;
-        if (0 == request->getParam("axis")->value().compareTo("az")) Actuator.moveAz(request->getParam("target")->value().toFloat());
-        if (0 == request->getParam("axis")->value().compareTo("el")) Actuator.moveEl(request->getParam("target")->value().toFloat());
-        request->send(200, "application/json" "{}");
-    });
-
-    Server.on("/step", HTTP_GET, [](AsyncWebServerRequest* request) {
-        if (!request->hasParam("axis") || !request->hasParam("step")) return;
-        if (0 == request->getParam("axis")->value().compareTo("az")) Actuator.stepAz(request->getParam("step")->value().toInt());
-        if (0 == request->getParam("axis")->value().compareTo("el")) Actuator.stepEl(request->getParam("step")->value().toInt());
-        request->send(200, "application/json" "{}");
-    });
+    Tracker.begin(&Server);
 
     Server.begin();
 }
 
 void loop() {
+    Tracker.handle();
+    delay(1000);
 }

@@ -1,141 +1,150 @@
 #ifndef __HB9HCR_ACTUATOR__
 #define __HB9HCR_ACTUATOR__
 
+#include <AsyncJson.h>
+#include <ESPAsyncWebServer.h>
 #include <SCServo.h>
-
-#define HB9HCR_AXIS_AZ 1
-#define HB9HCR_AXIS_EL 2
 
 class HB9HCR_Actuator {
    private:
-    static constexpr float spd = 4096.0f / 360.0f;
+    String response;
     SMS_STS Servo;
+    time_t t;
 
    public:
-    uint16_t el_center = 1023;
-    float az_degree = 0;
-    float el_degree = 0;
-    float az_offset = 0;
-    float el_offset = 0;
+    static constexpr float STP_DEG = 4096.0f / 360.0f;  // steps per degree
+    static constexpr int STP_TRN = 4096;                // steps per full turn
+    static constexpr int AZ_MAX = 3068;                 // cable tangling prevention
+    float degree[2] = {0};
+    long position[2] = {0};
 
     HB9HCR_Actuator() {}
 
-    void begin() {
+    void begin(AsyncWebServer* Server) {
+        // initialize servos via UART
         Serial0.begin(1000000, SERIAL_8N1, RX, TX);
-
-        while (!Serial0) {
-            delay(500);
-        }
-
+        while (!Serial0) delay(100);
         Servo.pSerial = &Serial0;
+        Serial.println("actuator: servos initialized on UART bus Serial0");
 
-        /*
-        Servo.unLockEprom(1);
-
-        // 2. Write the new ID (2) to the ID register of servo 1
-        // Parameters: CurrentID, Register, NewValue
-        Servo.writeByte(1, SMS_STS_ID, 2);
-
-        // 3. Lock the EPROM to save the change
-        Servo.LockEprom(2);
-
-        Serial.println("Change complete. Verifying...");
-
-        delay(1000);
-        if (Servo.FeedBack(2) != -1) {
-            Serial.println("SUCCESS: Servo is now ID 2!");
-        } else {
-            Serial.println("FAILED: Servo not found at ID 2. Check power/wiring.");
+        // set servos to multi-turn mode
+        for (short i = 1; i <= 2; i++) {
+            Servo.unLockEprom(i);
+            // servo mode 3 (relative)
+            Servo.writeByte(i, SMS_STS_MODE, 3);
+            // servo angle limits off
+            Servo.writeWord(i, 9, 0);
+            Servo.writeWord(i, 11, 0);
+            Servo.LockEprom(i);
+            Servo.EnableTorque(i, 1);
         }
-        */
 
-        /*
-        Servo.WritePosEx(1, 1535, 0, 50);
-        Servo.WritePosEx(2, 1535, 0, 50);
-        delay(2000);
-        Servo.WritePosEx(1, 511, 0, 50);
-        Servo.WritePosEx(2, 511, 0, 50);
-        delay(2000);
-        Servo.WritePosEx(1, 1023, 0, 50);
-        Servo.WritePosEx(2, 1023, 0, 50);
-        */
+        Serial.println("actuator: servos set to multi-turn");
 
-        /*
-        Servo.unLockEprom(1); // Unlock to allow changes
-        Servo.writeByte(1, SMS_STS_MODE, 3); // 0 = Servo Mode, 1 = Motor Mode, 2, 3 = Step Mode?
-        Servo.LockEprom(1); // Lock to save
-        Servo.EnableTorque(1, 1);
-        */
+        // direct control absolute movement
+        Server->on("/move", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            if (!request->hasParam("axis") || !request->hasParam("target")) return;
 
-        /*
-        Servo.WritePosEx(1, 256, 0, 25);
-        delay(1000);
-        Servo.WritePosEx(1, -512, 0, 25);
-        delay(1000);
-        Servo.WritePosEx(1, 256, 0, 25);
-        */
+
+            float az = 0 == request->getParam("axis")->value().compareTo("az") ? request->getParam("target")->value().toFloat() : 0;
+            float el = 0 == request->getParam("axis")->value().compareTo("el") ? request->getParam("target")->value().toFloat() : 0;
+            moveTo(az, el);
+
+            JsonDocument data;
+            time(&t);
+
+            data["az_degree"] = degree[0];
+            data["el_degree"] = degree[1];
+            data["az_position"] = position[0];
+            data["el_position"] = position[1];
+            data["timestamp"] = t;
+
+            serializeJson(data, response);
+
+            request->send(200, "application/json", response);
+        });
+
+        // direct control relative movement
+        Server->on("/step", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            if (!request->hasParam("axis") || !request->hasParam("step")) return;
+
+            int az = 0 == request->getParam("axis")->value().compareTo("az") ? request->getParam("step")->value().toInt() : 0;
+            int el = 0 == request->getParam("axis")->value().compareTo("el") ? request->getParam("step")->value().toInt() : 0;
+            move(az * STP_DEG, el * STP_DEG);
+
+            JsonDocument data;
+            time(&t);
+
+            data["az_degree"] = degree[0];
+            data["el_degree"] = degree[1];
+            data["az_position"] = position[0];
+            data["el_position"] = position[1];
+            data["timestamp"] = t;
+
+            serializeJson(data, response);
+
+            request->send(200, "application/json", response);
+        });
+
+        // direct control zero
+        Server->on("/zero", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            if (!request->hasParam("axis")) return;
+
+            bool az = 0 == request->getParam("axis")->value().compareTo("az");
+            bool el = 0 == request->getParam("axis")->value().compareTo("el");
+            zero(az, el);
+
+            JsonDocument data;
+            time(&t);
+
+            data["az_degree"] = degree[0];
+            data["el_degree"] = degree[1];
+            data["az_position"] = position[0];
+            data["el_position"] = position[1];
+            data["timestamp"] = t;
+
+            serializeJson(data, response);
+
+            request->send(200, "application/json", response);
+        });
+
+        Serial.println("actuator: direct control webhandlers attached");
     }
 
-    void home(float az, float el) {
-        this->az_degree = az;
-        this->el_degree = el;
-        this->el_offset = -el;
+    void move(int az, int el) {
+        if (0 != az) Servo.WritePosEx(1, az, 0, 50);
+        if (0 != el) Servo.WritePosEx(2, el, 0, 50);
+        this->position[0] += az;
+        this->position[1] += el;
+        this->degree[0] = (this->position[0] % STP_TRN) / STP_DEG;
+        this->degree[1] = (this->position[1] % STP_TRN) / STP_DEG;
+        delay(10);
+        while (Servo.ReadMove(1) || Servo.ReadMove(2));
+        Serial.printf("%04d:%04d\n", this->position[0], this->position[1]);
     }
 
-    bool move(float az, float el) {
-        if (this->moving()) return false;
-        Servo.WritePosEx(HB9HCR_AXIS_AZ, constrain(this->shortest(this->az_degree, az) * this->spd, -4095.0, 4095.0), 0, 25);
-        Servo.WritePosEx(HB9HCR_AXIS_EL, constrain(this->el_center + (this->el_offset + el) * this->spd, 0, 2047), 0, 25);
-        this->az_degree = az;
-        this->el_degree = el;
-        return true;
+    void moveTo(float az, float el) {
+        float shortest = this->shortest(this->degree[0], az);
+        float longest = this->longest(shortest);
+        this->move((abs(this->position[0] + shortest) < AZ_MAX ? shortest : longest) * STP_DEG, el * STP_DEG - this->position[1]);
     }
 
-    bool moveAz(float az) {
-        if (this->movingAz()) return false;
-        Servo.WritePosEx(HB9HCR_AXIS_AZ, constrain(this->shortest(this->az_degree, az) * this->spd, -4095.0, 4095.0), 0, 25);
-        this->az_degree = az;
-        return true;
-    }
-
-    bool moveEl(float el) {
-        if (this->movingEl()) return false;
-        Servo.WritePosEx(HB9HCR_AXIS_EL, constrain(this->el_center + (this->el_offset + el) * this->spd, 0, 2047), 0, 25);
-        this->el_degree = el;
-        return true;
-    }
-
-    bool stepAz(int az) {
-        if (this->movingAz()) return false;
-        Servo.WritePosEx(HB9HCR_AXIS_AZ, az * this->spd, 0, 25);
-        this->az_degree += az;
-        return true;
-    }
-
-    bool stepEl(int el) {
-        if (this->movingEl()) return false;
-        Servo.WritePosEx(HB9HCR_AXIS_EL, constrain(this->el_center + (this->el_offset + this->el_degree + el) * this->spd, 0, 2047), 0, 25);
-        this->el_degree += el;
-        return true;
-    }
-
-    bool moving() {
-        return Servo.ReadMove(HB9HCR_AXIS_AZ) | Servo.ReadMove(HB9HCR_AXIS_EL);
-    }
-
-    bool movingAz() {
-        return Servo.ReadMove(HB9HCR_AXIS_AZ);
-    }
-
-    bool movingEl() {
-        return Servo.ReadMove(HB9HCR_AXIS_EL);
+    float longest(float delta) {
+        if (delta > 0) return delta - 360.0f;
+        if (delta < 0) return delta + 360.0f;
+        return 0;
     }
 
     float shortest(float current, float target) {
-        float diff = target - current;
-        while (diff <= -180) diff += 360;
-        while (diff > 180) diff -= 360;
-        return diff;
+        float delta = target - current;
+        while (delta <= -180.0f) delta += 360.0f;
+        while (delta > 180.0f) delta -= 360.0f;
+        return delta;
+    }
+
+    void zero(bool az, bool el) {
+        if (az) this->position[0] = this->degree[0] = 0;
+        if (el) this->position[1] = this->degree[1] = 0;
     }
 };
 

@@ -97,20 +97,20 @@
             <span>LOS EL&deg;</span>
         </div>
         <div class="grid">
-            <input type="number" min="0" max="359" step="1" value="0">
-            <input type="number" min="0" max="90" step="1" value="0">
-            <input type="number" min="0" max="90" step="1" value="0">
-            <input type="number" min="0" max="359" step="1" value="0">
-            <input type="number" min="0" max="90" step="1" value="0">
+            <input id="aos_az" type="number" min="0" max="359" step="1" value="0">
+            <input id="aos_el" type="number" min="0" max="90" step="1" value="0">
+            <input id="max_el" type="number" min="0" max="90" step="1" value="0">
+            <input id="los_az" type="number" min="0" max="359" step="1" value="0">
+            <input id="los_el" type="number" min="0" max="90" step="1" value="0">
             <span>AOS Time</span>
-            <input type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM">
-            <span id="time">00:00:00</span>
-            <input type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM">
+            <input id="aos" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM">
+            <span id="time">--:--:--</span>
+            <input id="los" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM">
             <span>LOS Time</span>
             <span></span>
-            <button>SET</button>
-            <button>CLEAR</button>
-            <button>EXECUTE</button>
+            <button name="set">SET</button>
+            <button name="clear">CLEAR</button>
+            <button name="execute">EXECUTE</button>
         </div>
         <h2>DIRECT CONTROL</h2>
         <div class="grid mt">
@@ -172,7 +172,7 @@
                 document.getElementById('el_sensor').innerText = data.el_sensor.toFixed(2);
                 // document.getElementById('datetime').innerText = data.datetime;
             });
-        }, 1000);
+        }, 10000);
 
         let debug = document.querySelector('#debug');
 
@@ -216,10 +216,28 @@
                     const date = new Date(data.timestamp * 1000);
                     document.querySelector("#az_axis").innerText = data.az_degree.toFixed(2);
                     document.querySelector("#el_axis").innerText = data.el_degree.toFixed(2);
-                    document.querySelector("#time").innerText = date.getHours().toString().padStart(2, '0') +
-                        date.getMinutes().toString().padStart(2, '0') +
+                    document.querySelector("#time").innerText = date.getHours().toString().padStart(2, '0') + ':' +
+                        date.getMinutes().toString().padStart(2, '0') + ':' +
                         date.getSeconds().toString().padStart(2, '0');
                 });
+            });
+        });
+
+        document.querySelector('button[name="execute"]').addEventListener('click', (event) => {
+            let url = new URL('http://192.168.4.1/execute');
+            fetch(url).then(response => response.json()).then(data => {
+            });
+        });
+        
+        document.querySelector('button[name="clear"]').addEventListener('click', (event) => {
+            let url = new URL('http://192.168.4.1/clear');
+            fetch(url).then(response => response.json()).then(data => {
+            });
+        });
+
+        document.querySelector('button[name="execute"]').addEventListener('click', (event) => {
+            let url = new URL('http://192.168.4.1/set');
+            fetch(url).then(response => response.json()).then(data => {
             });
         });
     </script>

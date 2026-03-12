@@ -36,11 +36,10 @@ void setup() {
     Serial.println(WiFi.softAPIP());
 
     Clock.begin();
-
     Sensor.begin();
+    
     Actuator.begin(&Server);
-
-    Sensor.calibrate(&Actuator);
+    Actuator.calibrate(&Sensor);
    
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -67,11 +66,9 @@ void setup() {
         json += "\"az_sensor\":" + String(Sensor.degree[0]) + ",";
         json += "\"el_axis\":" + String(Actuator.degree[1]) + ",";
         json += "\"el_sensor\":" + String(Sensor.degree[1]) + ",";
-        json += "\"datetime\":\"" + String(dt.c_str()) + "\"}";
+        json += "\"datetime\":\"" + String(dt.c_str()) + ",";
         json += "\"timestamp\":\"" + String(t) + "\"}";
         request->send(200, "application/json", json);
-
-        Serial.println(json);
     });
 
     Tracker.begin(&Server);

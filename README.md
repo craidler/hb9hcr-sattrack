@@ -90,3 +90,9 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 - [ ] 2x Grommet (Radiator)
 - [ ] 1x Aircell-5
 - [ ] 1x PL Female
+
+
+
+
+
+dont forget: upload_protocol = esptool

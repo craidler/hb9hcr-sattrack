@@ -2,6 +2,7 @@
 #define __HB9HCR_TRACKER__
 
 // #include <ArduinoJson.h>
+#include <string.h>
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
 
@@ -36,7 +37,7 @@ class HB9HCR_Tracker {
 
     void begin(AsyncWebServer* Server) {
         // reset config
-        Server->on("/reset", HTTP_GET, [this](AsyncWebServerRequest* request) {
+        Server->on("/clear", HTTP_GET, [this](AsyncWebServerRequest* request) {
             state = State::IDLE;
 
             JsonDocument data;
@@ -181,12 +182,21 @@ class HB9HCR_Tracker {
         return true;
     }
 
-    char* toString(HB9HCR_Tracker::State s) {
+    float progress() {
+        time(&t);
+        unsigned int duration = los - aos;
+        unsigned int progress = t - aos;
+        return progress / duration;
+    }
+
+    std::string toString(HB9HCR_Tracker::State s) {
         switch (s) {
             case HB9HCR_Tracker::State::IDLE:
                 return "IDLE";
             case HB9HCR_Tracker::State::EXECUTE:
                 return "EXECUTE";
+            case HB9HCR_Tracker::State::STANDBY:
+                return "STANDBY";
             case HB9HCR_Tracker::State::TRACK:
                 return "TRACK";
             case HB9HCR_Tracker::State::HOME:

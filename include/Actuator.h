@@ -5,6 +5,8 @@
 #include <ESPAsyncWebServer.h>
 #include <SCServo.h>
 
+#include "Sensor.h"
+
 class HB9HCR_Actuator {
    private:
     String response;
@@ -111,6 +113,22 @@ class HB9HCR_Actuator {
         Serial.println("actuator: direct control webhandlers attached");
     }
 
+    void calibrate(HB9HCR_Sensor* Sensor) {
+        Serial.print("actuator: calibration ");
+
+        float el = 0;
+
+        for (int i = 0; i < 200; i++) {
+            Sensor->read();
+            el += Sensor->degree[1];
+            delay(5);
+        }
+
+        Serial.printf("done: %.2f\n", el /= 200);
+        moveTo(0, -el);
+        zero(true, true);
+    }
+
     void move(int az, int el) {
         if (0 != az) Servo.WritePosEx(1, az, 0, 50);
         if (0 != el) Servo.WritePosEx(2, el, 0, 50);
@@ -120,7 +138,6 @@ class HB9HCR_Actuator {
         this->degree[1] = (this->position[1] % STP_TRN) / STP_DEG;
         delay(10);
         while (Servo.ReadMove(1) || Servo.ReadMove(2));
-        Serial.printf("%04d:%04d\n", this->position[0], this->position[1]);
     }
 
     void moveTo(float az, float el) {

@@ -23,11 +23,17 @@ void setup() {
     Serial.begin(115200);
     while (!Serial) delay(500);
 
-    Actuator.bind(&Serial);
-    Actuator.bind(&Sensor);
-    Actuator.bind(&Server);
-    Tracker.bind(&Actuator);
-    Tracker.bind(&Server);
+    Clock.begin();
+    Sensor.begin();
+
+    Actuator.Input = &Serial;
+    Actuator.Sensor = &Sensor;
+    Actuator.Server = &Server;
+    Actuator.begin();
+
+    Tracker.Actuator = &Actuator;
+    Tracker.Server = &Server;
+    Tracker.begin();
 
     if (!LittleFS.begin()) {
         Serial.println("littlefs: failed");
@@ -38,10 +44,6 @@ void setup() {
     WiFi.softAP(ssid, pass);
     Serial.print("wifi: access point at ");
     Serial.println(WiFi.softAPIP());
-
-    Clock.begin();
-    Sensor.begin();
-    Actuator.begin();
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(LittleFS, "/index.html", "text/html");
@@ -69,7 +71,6 @@ void setup() {
         request->send(200, "application/json", json);
     });
 
-    Tracker.begin();
     Server.begin();
 }
 

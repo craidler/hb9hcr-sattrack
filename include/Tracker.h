@@ -10,8 +10,6 @@
 
 class HB9HCR_Tracker {
    private:
-    HB9HCR_Actuator* _Actuator;
-    AsyncWebServer* _Server;
     String response;
 
     unsigned short aos_az = 0;
@@ -35,133 +33,128 @@ class HB9HCR_Tracker {
         PARK,
     };
 
-    State _state = State::IDLE;
+    HB9HCR_Actuator* Actuator = nullptr;
+    AsyncWebServer* Server = nullptr;
+    State State = State::IDLE;
 
     HB9HCR_Tracker() {}
 
-    void bind(HB9HCR_Actuator* Actuator) {
-        _Actuator = Actuator;
-    }
-
-    void bind(AsyncWebServer* Server) {
-        _Server = Server;
-    }
-
     void begin() {
-        if (_Server == nullptr) return;
+        if (this->Server != nullptr) {
+            Serial.println("tracker: pass control webhandlers ");
+            // reset config
+            this->Server->on("/clear", HTTP_GET, [this](AsyncWebServerRequest* request) {
+                State = State::IDLE;
 
-        // reset config
-        _Server->on("/clear", HTTP_GET, [this](AsyncWebServerRequest* request) {
-            _state = State::IDLE;
+                JsonDocument data;
+                time(&t);
 
-            JsonDocument data;
-            time(&t);
+                data["aos"] = aos = 0;
+                data["aos_az"] = aos_az = 0;
+                data["aos_el"] = aos_el = 0;
+                data["los"] = los = 0;
+                data["los_az"] = los_az = 0;
+                data["los_el"] = los_el = 0;
+                data["max_el"] = max_el = 0;
+                data["timestamp"] = t;
 
-            data["aos"] = aos = 0;
-            data["aos_az"] = aos_az = 0;
-            data["aos_el"] = aos_el = 0;
-            data["los"] = los = 0;
-            data["los_az"] = los_az = 0;
-            data["los_el"] = los_el = 0;
-            data["max_el"] = max_el = 0;
-            data["timestamp"] = t;
+                serializeJson(data, response);
 
-            serializeJson(data, response);
+                request->send(200, "application/json", response);
+            });
 
-            request->send(200, "application/json", response);
-        });
+            // execute config
+            this->Server->on("/execute", HTTP_GET, [this](AsyncWebServerRequest* request) {
+                State = State::EXECUTE;
 
-        // execute config
-        _Server->on("/execute", HTTP_GET, [this](AsyncWebServerRequest* request) {
-            _state = State::EXECUTE;
+                JsonDocument data;
+                time(&t);
 
-            JsonDocument data;
-            time(&t);
+                data["aos"] = aos;
+                data["aos_az"] = aos_az;
+                data["aos_el"] = aos_el;
+                data["los"] = los;
+                data["los_az"] = los_az;
+                data["los_el"] = los_el;
+                data["max_el"] = max_el;
+                data["timestamp"] = t;
 
-            data["aos"] = aos;
-            data["aos_az"] = aos_az;
-            data["aos_el"] = aos_el;
-            data["los"] = los;
-            data["los_az"] = los_az;
-            data["los_el"] = los_el;
-            data["max_el"] = max_el;
-            data["timestamp"] = t;
+                serializeJson(data, response);
 
-            serializeJson(data, response);
+                request->send(200, "application/json", response);
+            });
 
-            request->send(200, "application/json", response);
-        });
+            // state
+            this->Server->on("/state", HTTP_GET, [this](AsyncWebServerRequest* request) {
+                JsonDocument data;
+                String s;
+                time(&t);
+                state(&s);
 
-        // state
-        _Server->on("/state", HTTP_GET, [this](AsyncWebServerRequest* request) {
-            JsonDocument data;
-            String s;
-            time(&t);
-            state(&s);
+                data["state"] = s;
+                data["countdown"] = cd;
+                data["timestamp"] = t;
 
-            data["state"] = s;
-            data["countdown"] = cd;
-            data["timestamp"] = t;
+                serializeJson(data, response);
 
-            serializeJson(data, response);
+                request->send(200, "application/json", response);
+            });
 
-            request->send(200, "application/json", response);
-        });
+            // set config
+            AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/config", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+                State = State::IDLE;
 
-        // set config
-        AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/config", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-            _state = State::IDLE;
+                JsonObject data = json.as<JsonObject>();
 
-            JsonObject data = json.as<JsonObject>();
+                if (data.isNull()) {
+                    request->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
+                    return;
+                }
 
-            if (data.isNull()) {
-                request->send(400, "application/json", "{\"error\":\"Invalid JSON\"}");
-                return;
-            }
+                time(&t);
 
-            time(&t);
+                aos = data["aos"];
+                aos_az = data["aos_az"];
+                aos_el = data["aos_el"];
+                los = data["los"];
+                los_az = data["los_az"];
+                los_el = data["los_el"];
+                max_el = data["max_el"];
+                data["timestamp"] = t;
 
-            aos = data["aos"];
-            aos_az = data["aos_az"];
-            aos_el = data["aos_el"];
-            los = data["los"];
-            los_az = data["los_az"];
-            los_el = data["los_el"];
-            max_el = data["max_el"];
-            data["timestamp"] = t;
+                serializeJson(data, response);
 
-            serializeJson(data, response);
+                request->send(200, "application/json", response);
+            });
 
-            request->send(200, "application/json", response);
-        });
+            this->Server->addHandler(configHandler);
+        }
 
-        _Server->addHandler(configHandler);
-
-        if (HB9HCR_DEBUG) Serial.println("tracker: pass control webhandlers attached");
+        Serial.println("attached");
     }
 
     void loop() {
-        if (State::IDLE == _state) return;
+        if (State::IDLE == State) return;
 
         time(&now);
 
-        if (State::EXECUTE == _state) {
+        if (State::EXECUTE == State) {
             if (!valid()) {
                 if (HB9HCR_DEBUG) Serial.println("tracker: EXECUTE to IDLE");
-                _state = State::IDLE;
+                State = State::IDLE;
                 return;
             }
 
-            if (_Actuator != nullptr) _Actuator->moveTo(aos_az, aos_el);
+            if (this->Actuator != nullptr) this->Actuator->moveTo(aos_az, aos_el);
             if (HB9HCR_DEBUG) Serial.println("tracker: EXECUTE to STANDBY");
-            _state = State::STANDBY;
+            State = State::STANDBY;
             return;
         }
 
-        if (State::STANDBY == _state) {
+        if (State::STANDBY == State) {
             if (now >= aos) {
                 if (HB9HCR_DEBUG) Serial.println("tracker: STANDBY to TRACK");
-                _state = State::TRACK;
+                State = State::TRACK;
                 cd = 0;
                 return;
             }
@@ -170,26 +163,26 @@ class HB9HCR_Tracker {
             return;
         }
 
-        if (State::TRACK == _state) {
+        if (State::TRACK == State) {
             if (now >= los) {
                 if (HB9HCR_DEBUG) Serial.println("tracker: TRACK to PARK");
-                _state = State::PARK;
+                State = State::PARK;
                 cd = 0;
                 return;
             }
 
             float az, el;
             current(&az, &el);
-            // Actuator->moveTo(az, el);
+            if (this->Actuator != nullptr) this->Actuator->moveTo(az, el);
             if (HB9HCR_DEBUG) Serial.printf("actuator: move to %.2f°:%.2f°\n", az, el);
             cd = los - now;
             return;
         }
 
-        if (State::PARK == _state) {
-            if (_Actuator != nullptr) _Actuator->moveTo(aos_az, aos_el);
+        if (State::PARK == State) {
+            if (this->Actuator != nullptr) this->Actuator->moveTo(aos_az, aos_el);
             if (HB9HCR_DEBUG) Serial.println("tracker: PARK to IDLE");
-            _state = State::IDLE;
+            State = State::IDLE;
             return;
         }
     }
@@ -220,7 +213,7 @@ class HB9HCR_Tracker {
     }
 
     bool state(String* s) {
-        switch (_state) {
+        switch (State) {
             case HB9HCR_Tracker::State::IDLE:
                 *s = "IDLE";
                 return true;
@@ -246,10 +239,6 @@ class HB9HCR_Tracker {
         }
 
         return false;
-    }
-
-    bool is(HB9HCR_Tracker::State state) {
-        return state == _state;
     }
 };
 

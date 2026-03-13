@@ -10,10 +10,6 @@
 
 class HB9HCR_Actuator {
    private:
-    AsyncWebServer* _Server;
-    HB9HCR_Sensor* _Sensor;
-    USBCDC* _Serial;
-
     String _command;
     String response;
     SMS_STS Servo;
@@ -29,19 +25,11 @@ class HB9HCR_Actuator {
 
     HB9HCR_Actuator() {}
 
-    void bind(AsyncWebServer* Server) {
-        _Server = Server;
-    }
+    AsyncWebServer* Server = nullptr;
+    HB9HCR_Sensor* Sensor = nullptr;
+    USBCDC* Input = nullptr;
 
-    void bind(HB9HCR_Sensor* Sensor) {
-        _Sensor = Sensor;
-    }
-
-    void bind(USBCDC* Serial) {
-        _Serial = Serial;
-    }
-
-    void begin() {
+    void begin() {        
         // initialize servos via UART
         Serial0.begin(1000000, SERIAL_8N1, RX, TX);
         while (!Serial0) delay(100);
@@ -62,25 +50,28 @@ class HB9HCR_Actuator {
 
         Serial.println("actuator: servos set to multi-turn");
 
-        if (_Sensor != nullptr) {
+        if (this->Sensor != nullptr) {
             Serial.print("actuator: calibration ");
 
             float el = 0;
 
             for (int i = 0; i < 200; i++) {
-                _Sensor->read();
-                el += _Sensor->degree[1];
+                this->Sensor->read();
+                el += this->Sensor->degree[1];
                 delay(5);
             }
 
-            Serial.printf("done: %.2f\n", el /= 200);
-            moveTo(0, -el);
+            moveTo(0, -(el /= 200));
             zero(true, true);
+
+            Serial.printf("done: %.2f\n", -el);
         }
 
-        if (_Server != nullptr) {
+        if (this->Server != nullptr) {
+            Serial.print("actuator: direct control webhandlers ");
+
             // direct control absolute movement
-            _Server->on("/move", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            this->Server->on("/move", HTTP_GET, [this](AsyncWebServerRequest* request) {
                 if (!request->hasParam("axis") || !request->hasParam("target")) return;
 
                 float az = 0 == request->getParam("axis")->value().compareTo("az") ? request->getParam("target")->value().toFloat() : 0;
@@ -102,7 +93,7 @@ class HB9HCR_Actuator {
             });
 
             // direct control relative movement
-            _Server->on("/step", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            this->Server->on("/step", HTTP_GET, [this](AsyncWebServerRequest* request) {
                 if (!request->hasParam("axis") || !request->hasParam("step")) return;
 
                 int az = 0 == request->getParam("axis")->value().compareTo("az") ? request->getParam("step")->value().toInt() : 0;
@@ -124,7 +115,7 @@ class HB9HCR_Actuator {
             });
 
             // direct control zero
-            _Server->on("/zero", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            this->Server->on("/zero", HTTP_GET, [this](AsyncWebServerRequest* request) {
                 if (!request->hasParam("axis")) return;
 
                 bool az = 0 == request->getParam("axis")->value().compareTo("az");
@@ -145,7 +136,7 @@ class HB9HCR_Actuator {
                 request->send(200, "application/json", response);
             });
 
-            Serial.println("actuator: direct control webhandlers attached");
+            Serial.println("attached");
         }
     }
 
@@ -185,54 +176,67 @@ class HB9HCR_Actuator {
         if (el) this->position[1] = this->degree[1] = 0;
     }
 
-    bool loop() {
-        if (_Serial == nullptr || !_Serial->available()) return;
+    void loop() {
+        if (this->Input == nullptr) return;
+        
+        while (this->Input->available()) {
+            _c = this->Input->read();
 
+            if ('\n' == _c) {
+                execute(&_command);
+                _command = "";
+                return;
+            }
 
-        _c = Serial.read();
-
-        if ('\n' != _c) {
             _command = _command + _c;
+        }
+    }
+
+    void execute(String* command) {
+        float az, el;
+
+        // set position
+        if (2 == sscanf(command->c_str(), "P %f %f", &az, &el)) {
+            moveTo(az, el);
             return;
         }
 
-        // set position
-        if (strncmp("P", _command.c_str(), 1)) {
-            // TODO: set position, parse command
-        }
-
         // get position
-        if (strncmp("p", _command.c_str(), 1)) {
-            stream->printf("%.2f %.2f", degree[0], degree[1]);
+        if (0 == strncmp("p", command->c_str(), 1)) {
+            Serial.printf("%.2f %.2f", degree[0], degree[1]);
+            return;
         }
 
         // move rotator
-        if (strncmp("M", _command.c_str(), 1)) {
-            // TODO: move
+        if (0 == strncmp("M", command->c_str(), 1)) {
+            // TODO: move, use sscanf
+            return;
         }
 
         // stop
-        if (strncmp("S", _command.c_str(), 1)) {
+        if (0 == strncmp("S", command->c_str(), 1)) {
             Servo.WriteSpe(1, 0, 0);
             Servo.WriteSpe(2, 0, 0);
+            return;
         }
 
         // park
-        if (strncmp("K", _command.c_str(), 1)) {
+        if (0 == strncmp("K", command->c_str(), 1)) {
             moveTo(0, 0);
+            return;
         }
 
         // set configuration parameter
-        if (strncmp("C", _command.c_str(), 1)) {
-            // TODO: set configuration parameter
+        if (0 == strncmp("C", command->c_str(), 1)) {
+            // TODO: set configuration parameter, use sscanf
+            return;
         }
 
         // get configuration parameter
-        if (strncmp("c", _command.c_str(), 1)) {
-            // TODO: get configuration parameter
+        if (0 == strncmp("c", command->c_str(), 1)) {
+            // TODO: get configuration parameter, use sscanf
+            return;
         }
-
-        _command = "";
     }
 };
 

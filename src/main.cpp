@@ -15,15 +15,13 @@ char datetime[20];
 
 AsyncWebServer Server(80);
 HB9HCR_Actuator Actuator;
-HB9HCR_Tracker Tracker;
+HB9HCR_Tracker Tracker = HB9HCR_Tracker(&Actuator);
 HB9HCR_Sensor Sensor;
 HB9HCR_Clock Clock;
 
 void setup() {
     Serial.begin(115200);
-    while (!Serial) {
-        delay(500);
-    }
+    while (!Serial) delay(500);
 
     if (!LittleFS.begin()) {
         Serial.println("littlefs: failed");
@@ -40,7 +38,6 @@ void setup() {
     
     Actuator.begin(&Server);
     Actuator.calibrate(&Sensor);
-   
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(LittleFS, "/index.html", "text/html");
@@ -55,24 +52,20 @@ void setup() {
     });
 
     Server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
-        String dt;
-        time_t t;
-        Clock.datetime(dt);
-        time(&t);
         Sensor.read();
+        time_t t;
+        time(&t);
 
         String json = "{";
         json += "\"az_axis\":" + String(Actuator.degree[0]) + ",";
         json += "\"az_sensor\":" + String(Sensor.degree[0]) + ",";
         json += "\"el_axis\":" + String(Actuator.degree[1]) + ",";
         json += "\"el_sensor\":" + String(Sensor.degree[1]) + ",";
-        json += "\"datetime\":\"" + String(dt.c_str()) + ",";
         json += "\"timestamp\":\"" + String(t) + "\"}";
         request->send(200, "application/json", json);
     });
 
     Tracker.begin(&Server);
-
     Server.begin();
 }
 

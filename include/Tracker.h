@@ -1,13 +1,16 @@
 #ifndef __HB9HCR_TRACKER__
 #define __HB9HCR_TRACKER__
 
-// #include <ArduinoJson.h>
-#include <string.h>
 #include <AsyncJson.h>
 #include <ESPAsyncWebServer.h>
+#include <string.h>
+
+#include "Actuator.h"
+#include "Config.h"
 
 class HB9HCR_Tracker {
    private:
+    HB9HCR_Actuator* Actuator;
     String response;
 
     unsigned short aos_az = 0;
@@ -30,15 +33,15 @@ class HB9HCR_Tracker {
         HOME,
     };
 
-    State state = State::IDLE;
+    State _state = State::IDLE;
 
    public:
-    HB9HCR_Tracker() {}
+    HB9HCR_Tracker(HB9HCR_Actuator* a) : Actuator(a) {}
 
     void begin(AsyncWebServer* Server) {
         // reset config
         Server->on("/clear", HTTP_GET, [this](AsyncWebServerRequest* request) {
-            state = State::IDLE;
+            _state = State::IDLE;
 
             JsonDocument data;
             time(&t);
@@ -59,7 +62,7 @@ class HB9HCR_Tracker {
 
         // execute config
         Server->on("/execute", HTTP_GET, [this](AsyncWebServerRequest* request) {
-            state = State::EXECUTE;
+            _state = State::EXECUTE;
 
             JsonDocument data;
             time(&t);
@@ -81,9 +84,11 @@ class HB9HCR_Tracker {
         // state
         Server->on("/state", HTTP_GET, [this](AsyncWebServerRequest* request) {
             JsonDocument data;
+            String s;
             time(&t);
+            state(&s);
 
-            data["state"] = toString(state);
+            data["state"] = s;
             data["countdown"] = cd;
             data["timestamp"] = t;
 
@@ -94,7 +99,7 @@ class HB9HCR_Tracker {
 
         // set config
         AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/config", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-            state = State::IDLE;
+            _state = State::IDLE;
 
             JsonObject data = json.as<JsonObject>();
 
@@ -121,32 +126,31 @@ class HB9HCR_Tracker {
 
         Server->addHandler(configHandler);
 
-        Serial.println("tracker: pass control webhandlers attached");
+        if (HB9HCR_DEBUG) Serial.println("tracker: pass control webhandlers attached");
     }
 
     void handle() {
-        if (State::IDLE == state) {
-            return;
-        }
+        if (State::IDLE == _state) return;
 
         time(&now);
 
-        if (State::EXECUTE == state) {
+        if (State::EXECUTE == _state) {
             if (!valid()) {
-                Serial.println("tracker: EXECUTE to IDLE");
-                state = State::IDLE;
+                if (HB9HCR_DEBUG) Serial.println("tracker: EXECUTE to IDLE");
+                _state = State::IDLE;
                 return;
             }
 
-            Serial.println("tracker: EXECUTE to STANDBY");
-            state = State::STANDBY;
+            Actuator->moveTo(aos_az, aos_el);
+            if (HB9HCR_DEBUG) Serial.println("tracker: EXECUTE to STANDBY");
+            _state = State::STANDBY;
             return;
         }
 
-        if (State::STANDBY == state) {
+        if (State::STANDBY == _state) {
             if (now >= aos) {
-                Serial.println("tracker: STANDBY to TRACK");
-                state = State::TRACK;
+                if (HB9HCR_DEBUG) Serial.println("tracker: STANDBY to TRACK");
+                _state = State::TRACK;
                 cd = 0;
                 return;
             }
@@ -155,23 +159,38 @@ class HB9HCR_Tracker {
             return;
         }
 
-        if (State::TRACK == state) {
+        if (State::TRACK == _state) {
             if (now >= los) {
-                Serial.println("tracker: TRACK to HOME");
-                state = State::HOME;
+                if (HB9HCR_DEBUG) Serial.println("tracker: TRACK to HOME");
+                _state = State::HOME;
                 cd = 0;
                 return;
             }
 
+            float az, el;
+            current(&az, &el);
+            // Actuator->moveTo(az, el);
+            if (HB9HCR_DEBUG) Serial.printf("actuator: move to %.2f°:%.2f°\n", az, el);
             cd = los - now;
             return;
         }
 
-        if (State::HOME == state) {
-            Serial.println("tracker: HOME to IDLE");
-            state = State::IDLE;
+        if (State::HOME == _state) {
+            Actuator->moveTo(aos_az, aos_el);
+            if (HB9HCR_DEBUG) Serial.println("tracker: HOME to IDLE");
+            _state = State::IDLE;
             return;
         }
+    }
+
+    bool current(float* az, float* el) {
+        // azimuth follows a linear path
+        unsigned short delta = (los_az - aos_az) % 360;
+        if (delta > 180) delta -= 360.0f;
+        *az = ((int)(aos_az + delta * progress() * 100) % 36000) / 100;
+        // elevation follows a sinusoidal path
+
+        return true;
     }
 
     bool valid() {
@@ -189,21 +208,33 @@ class HB9HCR_Tracker {
         return progress / duration;
     }
 
-    std::string toString(HB9HCR_Tracker::State s) {
-        switch (s) {
+    bool state(String* s) {
+        switch (_state) {
             case HB9HCR_Tracker::State::IDLE:
-                return "IDLE";
+                *s = "IDLE";
+                return true;
+
             case HB9HCR_Tracker::State::EXECUTE:
-                return "EXECUTE";
+                *s = "EXECUTE";
+                return true;
+
             case HB9HCR_Tracker::State::STANDBY:
-                return "STANDBY";
+                *s = "STANDBY";
+                return true;
+
             case HB9HCR_Tracker::State::TRACK:
-                return "TRACK";
+                *s = "TRACK";
+                return true;
+
             case HB9HCR_Tracker::State::HOME:
-                return "HOME";
+                *s = "HOME";
+                return true;
+
             default:
-                return "UNKNOWN";
+                *s = "UNKNOWN";
         }
+
+        return false;
     }
 };
 

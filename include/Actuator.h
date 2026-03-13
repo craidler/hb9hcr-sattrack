@@ -130,6 +130,7 @@ class HB9HCR_Actuator {
     }
 
     void move(int az, int el) {
+        // TODO: build in some sort of queueing
         if (0 != az) Servo.WritePosEx(1, az, 0, 50);
         if (0 != el) Servo.WritePosEx(2, el, 0, 50);
         this->position[0] += az;

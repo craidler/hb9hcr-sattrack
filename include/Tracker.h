@@ -10,7 +10,8 @@
 
 class HB9HCR_Tracker {
    private:
-    HB9HCR_Actuator* Actuator;
+    HB9HCR_Actuator* _Actuator;
+    AsyncWebServer* _Server;
     String response;
 
     unsigned short aos_az = 0;
@@ -25,22 +26,32 @@ class HB9HCR_Tracker {
     time_t cd;
     time_t t;
 
+   public:
     enum class State {
         IDLE,
         EXECUTE,
         STANDBY,
         TRACK,
-        HOME,
+        PARK,
     };
 
     State _state = State::IDLE;
 
-   public:
-    HB9HCR_Tracker(HB9HCR_Actuator* a) : Actuator(a) {}
+    HB9HCR_Tracker() {}
 
-    void begin(AsyncWebServer* Server) {
+    void bind(HB9HCR_Actuator* Actuator) {
+        _Actuator = Actuator;
+    }
+
+    void bind(AsyncWebServer* Server) {
+        _Server = Server;
+    }
+
+    void begin() {
+        if (_Server == nullptr) return;
+
         // reset config
-        Server->on("/clear", HTTP_GET, [this](AsyncWebServerRequest* request) {
+        _Server->on("/clear", HTTP_GET, [this](AsyncWebServerRequest* request) {
             _state = State::IDLE;
 
             JsonDocument data;
@@ -61,7 +72,7 @@ class HB9HCR_Tracker {
         });
 
         // execute config
-        Server->on("/execute", HTTP_GET, [this](AsyncWebServerRequest* request) {
+        _Server->on("/execute", HTTP_GET, [this](AsyncWebServerRequest* request) {
             _state = State::EXECUTE;
 
             JsonDocument data;
@@ -82,7 +93,7 @@ class HB9HCR_Tracker {
         });
 
         // state
-        Server->on("/state", HTTP_GET, [this](AsyncWebServerRequest* request) {
+        _Server->on("/state", HTTP_GET, [this](AsyncWebServerRequest* request) {
             JsonDocument data;
             String s;
             time(&t);
@@ -124,12 +135,12 @@ class HB9HCR_Tracker {
             request->send(200, "application/json", response);
         });
 
-        Server->addHandler(configHandler);
+        _Server->addHandler(configHandler);
 
         if (HB9HCR_DEBUG) Serial.println("tracker: pass control webhandlers attached");
     }
 
-    void handle() {
+    void loop() {
         if (State::IDLE == _state) return;
 
         time(&now);
@@ -141,7 +152,7 @@ class HB9HCR_Tracker {
                 return;
             }
 
-            Actuator->moveTo(aos_az, aos_el);
+            if (_Actuator != nullptr) _Actuator->moveTo(aos_az, aos_el);
             if (HB9HCR_DEBUG) Serial.println("tracker: EXECUTE to STANDBY");
             _state = State::STANDBY;
             return;
@@ -161,8 +172,8 @@ class HB9HCR_Tracker {
 
         if (State::TRACK == _state) {
             if (now >= los) {
-                if (HB9HCR_DEBUG) Serial.println("tracker: TRACK to HOME");
-                _state = State::HOME;
+                if (HB9HCR_DEBUG) Serial.println("tracker: TRACK to PARK");
+                _state = State::PARK;
                 cd = 0;
                 return;
             }
@@ -175,9 +186,9 @@ class HB9HCR_Tracker {
             return;
         }
 
-        if (State::HOME == _state) {
-            Actuator->moveTo(aos_az, aos_el);
-            if (HB9HCR_DEBUG) Serial.println("tracker: HOME to IDLE");
+        if (State::PARK == _state) {
+            if (_Actuator != nullptr) _Actuator->moveTo(aos_az, aos_el);
+            if (HB9HCR_DEBUG) Serial.println("tracker: PARK to IDLE");
             _state = State::IDLE;
             return;
         }
@@ -226,8 +237,8 @@ class HB9HCR_Tracker {
                 *s = "TRACK";
                 return true;
 
-            case HB9HCR_Tracker::State::HOME:
-                *s = "HOME";
+            case HB9HCR_Tracker::State::PARK:
+                *s = "PARK";
                 return true;
 
             default:
@@ -235,6 +246,10 @@ class HB9HCR_Tracker {
         }
 
         return false;
+    }
+
+    bool is(HB9HCR_Tracker::State state) {
+        return state == _state;
     }
 };
 

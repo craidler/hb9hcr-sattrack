@@ -15,13 +15,19 @@ char datetime[20];
 
 AsyncWebServer Server(80);
 HB9HCR_Actuator Actuator;
-HB9HCR_Tracker Tracker = HB9HCR_Tracker(&Actuator);
+HB9HCR_Tracker Tracker;
 HB9HCR_Sensor Sensor;
 HB9HCR_Clock Clock;
 
 void setup() {
     Serial.begin(115200);
     while (!Serial) delay(500);
+
+    Actuator.bind(&Serial);
+    Actuator.bind(&Sensor);
+    Actuator.bind(&Server);
+    Tracker.bind(&Actuator);
+    Tracker.bind(&Server);
 
     if (!LittleFS.begin()) {
         Serial.println("littlefs: failed");
@@ -35,9 +41,7 @@ void setup() {
 
     Clock.begin();
     Sensor.begin();
-    
-    Actuator.begin(&Server);
-    Actuator.calibrate(&Sensor);
+    Actuator.begin();
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(LittleFS, "/index.html", "text/html");
@@ -65,11 +69,12 @@ void setup() {
         request->send(200, "application/json", json);
     });
 
-    Tracker.begin(&Server);
+    Tracker.begin();
     Server.begin();
 }
 
 void loop() {
-    Tracker.handle();
-    delay(1000);
+    Actuator.loop();
+    Tracker.loop();
+    delay(100);
 }

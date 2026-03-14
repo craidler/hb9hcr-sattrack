@@ -130,11 +130,14 @@ class HB9HCR_Tracker {
         Serial.println("attached");
     }
 
+    // tracker state machine
     void loop() {
+        // idling ...
         if (State::IDLE == State) return;
 
         time(&now);
 
+        // exe button was pressed, validate configuration, if fine move to initial position and pass on to standby
         if (State::EXECUTE == State) {
             if (!valid()) {
                 Serial.println("tracker: EXECUTE to IDLE");
@@ -148,6 +151,7 @@ class HB9HCR_Tracker {
             return;
         }
 
+        // wait until aos and pass on to track
         if (State::STANDBY == State) {
             if (now >= aos) {
                 Serial.println("tracker: STANDBY to TRACK");
@@ -160,6 +164,7 @@ class HB9HCR_Tracker {
             return;
         }
 
+        // track satellite pass, if los pass to park
         if (State::TRACK == State) {
             if (now >= los) {
                 Serial.println("tracker: TRACK to PARK");
@@ -176,6 +181,7 @@ class HB9HCR_Tracker {
             return;
         }
 
+        // park actuator and pass on to idle
         if (State::PARK == State) {
             if (Actuator != nullptr) Actuator->moveTo(aos_az, aos_el);
             Serial.println("tracker: PARK to IDLE");
@@ -184,16 +190,14 @@ class HB9HCR_Tracker {
         }
     }
 
+    // calculate the current target angles for both axis based on progress
     bool current(float* az, float* el) {
-        // azimuth follows a linear path
-        unsigned short delta = (los_az - aos_az) % 360;
-        if (delta > 180) delta -= 360.0f;
-        *az = ((int)(aos_az + delta * progress() * 100) % 36000) / 100;
-        // elevation follows a sinusoidal path
-
+        // TODO: azimuth follows a linear path
+        // TODO: elevation follows a sinusoidal path
         return true;
     }
 
+    // validate pass configuration
     bool valid() {
         time(&t);
         if (t > aos + 10) return false;      // check for 10 seconds lead
@@ -202,13 +206,16 @@ class HB9HCR_Tracker {
         return true;
     }
 
+    // calculate progress based on passed time
     float progress() {
+        // TODO: prevent division by zero
         time(&t);
         unsigned int duration = los - aos;
         unsigned int progress = t - aos;
         return progress / duration;
     }
 
+    // return the state as a string
     bool state(String* s) {
         switch (State) {
             case HB9HCR_Tracker::State::IDLE:

@@ -38,7 +38,6 @@ void setup() {
     Tracker.Server = &Server;
     Tracker.begin();
 
-
     Serial.print("littlefs: ");
 
     if (!LittleFS.begin()) {

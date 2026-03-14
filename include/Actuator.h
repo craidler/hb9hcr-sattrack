@@ -52,6 +52,7 @@ class HB9HCR_Actuator {
 
         Serial.println("connected");
 
+        // calibrate actuator elevation
         if (Sensor != nullptr) {
             Serial.print("actuator: calibration ");
 
@@ -113,7 +114,7 @@ class HB9HCR_Actuator {
                 request->send(200, "application/json", response);
             });
 
-            // zero
+            // normalize
             Server->on("/zero", HTTP_GET, [this](AsyncWebServerRequest* request) {
                 data.clear();
                 time(&t);
@@ -134,6 +135,7 @@ class HB9HCR_Actuator {
         }
     }
 
+    // move axis a given amount of steps
     void move(int az_t, int el_t) {
         // TODO: build in some sort of queueing
         if (0 != az_t) Servo.WritePosEx(1, az_t, 0, 50);
@@ -146,18 +148,21 @@ class HB9HCR_Actuator {
         while (Servo.ReadMove(1) || Servo.ReadMove(2));
     }
 
+    // move axis to a specific position in degrees
     void moveTo(float az_t, float el_t) {
         float s = shortest(az, az_t);
         float l = longest(s);
         move((abs(az_p + s) < AZ_MAX ? s : l) * STP_DEG, el_t * STP_DEG - el_p);
     }
 
+    // the long way of a angle (delta) in a 360° circle
     float longest(float delta) {
         if (delta > 0) return delta - 360.0f;
         if (delta < 0) return delta + 360.0f;
         return 0;
     }
 
+    // the short way of an angle (delta) in a 360° circle
     float shortest(float current, float target) {
         float delta = target - current;
         while (delta <= -180.0f) delta += 360.0f;
@@ -165,11 +170,13 @@ class HB9HCR_Actuator {
         return delta;
     }
 
+    // normalize current state of servos as point zero
     void zero() {
         az_p = az = 0;
         el_p = el = 0;
     }
 
+    // assemble commands from usb
     void loop() {
         if (Input == nullptr) return;
 
@@ -186,7 +193,9 @@ class HB9HCR_Actuator {
         }
     }
 
+    // execute commands from usb
     void execute() {
+        unsigned short direction, speed;
         float az_t, el_t;
 
         // set position
@@ -201,10 +210,28 @@ class HB9HCR_Actuator {
             return;
         }
 
-        // move rotator
-        if (0 == strncmp("M", command.c_str(), 1)) {
-            // TODO: move, use sscanf
-            return;
+        // move rotator, this is quite dangerous as there are no stop switches on the device
+        // azimuth can snap cables, elevation servo can hit physics
+        if (2 == sscanf(command.c_str(), "M %d %d", direction, speed)) {
+            switch (direction) {
+                case 1:
+                    Servo.WriteSpe(1, 0, 0);
+                    Servo.WriteSpe(2, 0, 0);
+                    return;
+
+                case 2:
+                case 3:
+                    Servo.WriteSpe(1, 2 == direction ? speed : -speed, 50);
+                    return;
+
+                case 4:
+                case 5:
+                    Servo.WriteSpe(2, 4 == direction ? speed : -speed, 50);
+                    return;
+
+                default:
+                    return;
+            }
         }
 
         // stop

@@ -175,7 +175,7 @@ class HB9HCR_Tracker {
 
             float az, el;
             current(&az, &el);
-            if (Actuator != nullptr) Actuator->moveTo(az, el);
+            // if (Actuator != nullptr) Actuator->moveTo(az, el);
             Serial.printf("actuator: move to %.2f°:%.2f°\n", az, el);
             cd = los - now;
             return;
@@ -192,8 +192,11 @@ class HB9HCR_Tracker {
 
     // calculate the current target angles for both axis based on progress
     bool current(float* az, float* el) {
-        // TODO: azimuth follows a linear path
-        // TODO: elevation follows a sinusoidal path
+        float p = progress();
+        // azimuth follows a linear path
+        *az = Actuator->shortest(Actuator->az, los_az) * p;
+        // elevation follows a sinusoidal path
+        *el = max_el * sin(p * M_PI); 
         return true;
     }
 

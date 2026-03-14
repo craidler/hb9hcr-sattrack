@@ -18,6 +18,9 @@ HB9HCR_Actuator Actuator;
 HB9HCR_Tracker Tracker;
 HB9HCR_Sensor Sensor;
 HB9HCR_Clock Clock;
+JsonDocument data;
+String response;
+time_t t;
 
 void setup() {
     Serial.begin(115200);
@@ -35,14 +38,18 @@ void setup() {
     Tracker.Server = &Server;
     Tracker.begin();
 
+
+    Serial.print("littlefs: ");
+
     if (!LittleFS.begin()) {
-        Serial.println("littlefs: failed");
+        Serial.println("failed");
+        return;
     }
 
-    Serial.println("littlefs: mounted");
+    Serial.println("mounted");
 
+    Serial.print("wifi: access point ");
     WiFi.softAP(ssid, pass);
-    Serial.print("wifi: access point at ");
     Serial.println(WiFi.softAPIP());
 
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
@@ -59,16 +66,15 @@ void setup() {
 
     Server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
         Sensor.read();
-        time_t t;
         time(&t);
-
-        String json = "{";
-        json += "\"az_axis\":" + String(Actuator.degree[0]) + ",";
-        json += "\"az_sensor\":" + String(Sensor.degree[0]) + ",";
-        json += "\"el_axis\":" + String(Actuator.degree[1]) + ",";
-        json += "\"el_sensor\":" + String(Sensor.degree[1]) + ",";
-        json += "\"timestamp\":\"" + String(t) + "\"}";
-        request->send(200, "application/json", json);
+        data.clear();
+        data["az_axis"] = Actuator.az;
+        data["az_sensor"] = Sensor.az;
+        data["el_axis"] = Actuator.el;
+        data["el_sensor"] = Sensor.el;
+        data["timestamp"] = t;
+        serializeJson(data, response);
+        request->send(200, "application/json", response);
     });
 
     Server.begin();

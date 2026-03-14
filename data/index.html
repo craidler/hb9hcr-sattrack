@@ -8,6 +8,7 @@
     <link rel="icon" type="image/svg" href="/favicon.svg">
     <style>
         body {
+            box-sizing: border-box;
             font-family: monospace;
             text-align: center;
             padding: 0 1rem;
@@ -39,23 +40,38 @@
         }
 
         .grid {
+            background: #383838;
+            border-radius: .5rem;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
             grid-template-rows: auto auto;
             gap: 1rem;
+            padding: .5rem;
         }
 
         .grid>* {
             padding: .5rem;
-            border: 1px solid transparent;
         }
 
         .grid>button,
-        .grid>input {
+        .grid>input,
+        .grid>span {
+            min-width: 0;
+            vertical-align: middle;
+            line-height: 3rem;
             text-align: center;
+            color: #fff;
+        }
+
+        .grid>button,
+        .grid>input,
+        .grid>input:active {
             background: #444;
             border: 1px solid #aaa;
-            color: #fff;
+        }
+
+        .grid>span {
+            border: 1px solid #444;
         }
 
         .mt {
@@ -95,22 +111,21 @@
             <span><strong>MAX EL&deg;</strong></span>
             <span>LOS AZ&deg;</span>
             <span>LOS EL&deg;</span>
-        </div>
-        <div class="grid">
-            <input id="aos_az" type="number" min="0" max="359" step="1" value="0">
-            <input id="aos_el" type="number" min="0" max="90" step="1" value="0">
-            <input id="max_el" type="number" min="0" max="90" step="1" value="0">
-            <input id="los_az" type="number" min="0" max="359" step="1" value="0">
-            <input id="los_el" type="number" min="0" max="90" step="1" value="0">
-            <span>AOS Time</span>
-            <input id="aos" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM">
+            <input id="aos_az" type="text" placeholder="0" autocomplete="off">
+            <input id="aos_el" type="text" placeholder="0" autocomplete="off">
+            <input id="max_el" type="text" placeholder="0" autocomplete="off">
+            <input id="los_az" type="text" placeholder="0" autocomplete="off">
+            <input id="los_el" type="text" placeholder="0" autocomplete="off">
+            <span>AOS</span>
+            <input id="aos" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM" autocomplete="off">
             <span id="time">--:--:--</span>
-            <input id="los" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM">
-            <span>LOS Time</span>
-            <span></span>
+            <input id="los" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM" autocomplete="off">
+            <span>LOS</span>
+            <span id="state">IDLE</span>
             <button name="set">SET</button>
-            <button name="clear">CLEAR</button>
-            <button name="execute">EXECUTE</button>
+            <button name="clear">CLR</button>
+            <button name="execute">EXEC</button>
+            <span>T-<span id="cd">0</span><span>s</span></span>
         </div>
         <h2>DIRECT CONTROL</h2>
         <div class="grid mt">
@@ -119,20 +134,18 @@
                 <span id="az_axis">0</span><span>&deg;</span>
             </span>
             <span><strong>AZIMUTH</strong></span>
-            <span>Sensor</span>
             <span>
                 <span id="az_sensor">0</span><span>&deg;</span>
             </span>
-        </div>
-        <div class="grid">
-            <button data-axis="az" data-target="270" class="span">270&deg; W</button>
-            <button data-axis="az" data-target="315">315&deg; NW</button>
-            <button data-axis="az" data-target="0">0&deg; N</button>
-            <button data-axis="az" data-target="45">45&deg; NE</button>
-            <button data-axis="az" data-target="90" class="span">90&deg; E</button>
-            <button data-axis="az" data-target="225">225&deg; SE</button>
-            <button data-axis="az" data-target="180">180&deg; S</button>
-            <button data-axis="az" data-target="135">135&deg; SW</button>
+            <span>Sensor</span>
+            <button data-axis="az" data-target="270" class="span">270&deg;</button>
+            <button data-axis="az" data-target="315">315&deg;</button>
+            <button data-axis="az" data-target="0">0&deg;</button>
+            <button data-axis="az" data-target="45">45&deg;</button>
+            <button data-axis="az" data-target="90" class="span">90&deg;</button>
+            <button data-axis="az" data-target="225">225&deg;</button>
+            <button data-axis="az" data-target="180">180&deg;</button>
+            <button data-axis="az" data-target="135">135&deg;</button>
             <button data-axis="az" data-step="-10">-10&deg;</button>
             <button data-axis="az" data-step="-1">-1&deg;</button>
             <button data-zero="az">ZERO</button>
@@ -145,12 +158,10 @@
                 <span id="el_axis">0</span><span>&deg;</span>
             </span>
             <span><strong>ELEVATION</strong></span>
-            <span>Sensor</span>
             <span>
                 <span id="el_sensor">0</span><span>&deg;</span>
             </span>
-        </div>
-        <div class="grid">
+            <span>Sensor</span>
             <button data-axis="el" data-target="0">0&deg;</button>
             <button data-axis="el" data-target="22.5">22.5&deg;</button>
             <button data-axis="el" data-target="45">45&deg;</button>
@@ -164,6 +175,14 @@
         </div>
     </div>
     <script>
+        function timestamp(id) {
+            let d = new Date();
+            let t = document.querySelector('#' + id).value || String(d.getHours()).padStart(2, 0) + ':' + String(d.getMinutes()).padStart(2, 0);
+            let [h, m] = t.split(':').map(Number);
+            d.setHours(h, m, 0, 0);
+            return d.getTime();
+        }
+
         setInterval(function () {
             fetch('/data').then(response => response.json()).then(data => {
                 // document.getElementById('az_axis').innerText = data.az_axis.toFixed(2);
@@ -228,16 +247,28 @@
             fetch(url).then(response => response.json()).then(data => {
             });
         });
-        
+
         document.querySelector('button[name="clear"]').addEventListener('click', (event) => {
             let url = new URL('http://192.168.4.1/clear');
             fetch(url).then(response => response.json()).then(data => {
             });
         });
 
-        document.querySelector('button[name="execute"]').addEventListener('click', (event) => {
-            let url = new URL('http://192.168.4.1/set');
-            fetch(url).then(response => response.json()).then(data => {
+        document.querySelector('button[name="set"]').addEventListener('click', (event) => {
+            const data = {
+                'aos': timestamp('aos'),
+                'los': timestamp('los'),
+                'aos_az': parseInt(document.querySelector('#aos_az').value) || 0,
+                'aos_el': parseInt(document.querySelector('#aos_el').value) || 0,
+                'los_az': parseInt(document.querySelector('#los_az').value) || 0,
+                'los_el': parseInt(document.querySelector('#los_el').value) || 0,
+                'max_el': parseInt(document.querySelector('#max_el').value) || 0,
+            };
+            
+            const response = fetch('http://192.168.4.1/set', {
+                method: 'POST',
+                headers: {'Content-type': 'application/json'},
+                body: JSON.stringify(data),
             });
         });
     </script>

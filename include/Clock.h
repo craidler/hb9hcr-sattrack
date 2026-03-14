@@ -9,6 +9,8 @@ class HB9HCR_Clock {
    private:
     GravityRtc RTC;
     String dt;
+    time_t now;
+    struct tm t;
     char buffer[20];
 
    public:
@@ -19,9 +21,8 @@ class HB9HCR_Clock {
         // RTC.adjustRtc(F(__DATE__), F(__TIME__));
 
         // sync the esp32 rtc with the gravity one
-        struct tm t;
         time(t);
-        time_t now = mktime(&t);
+        now = mktime(&t);
         struct timeval tv = { .tv_sec = now, .tv_usec = 0 };
         settimeofday(&tv, NULL);
 

@@ -45,6 +45,7 @@ class HB9HCR_Tracker {
                 data["los_az"] = los_az = 0;
                 data["los_el"] = los_el = 0;
                 data["max_el"] = max_el = 0;
+                data["state"] = "";
                 data["timestamp"] = t;
 
                 serializeJson(data, response);
@@ -65,6 +66,7 @@ class HB9HCR_Tracker {
                 data["los_az"] = los_az;
                 data["los_el"] = los_el;
                 data["max_el"] = max_el;
+                data["state"] = "";
                 data["timestamp"] = t;
 
                 serializeJson(data, response);
@@ -79,8 +81,14 @@ class HB9HCR_Tracker {
                 time(&t);
                 state(&s);
 
-                data["state"] = s;
-                data["countdown"] = cd;
+                data["aos"] = aos;
+                data["aos_az"] = aos_az;
+                data["aos_el"] = aos_el;
+                data["los"] = los;
+                data["los_az"] = los_az;
+                data["los_el"] = los_el;
+                data["max_el"] = max_el;
+                data["state"] = "";
                 data["timestamp"] = t;
 
                 serializeJson(data, response);
@@ -109,6 +117,7 @@ class HB9HCR_Tracker {
                 los_az = data["los_az"];
                 los_el = data["los_el"];
                 max_el = data["max_el"];
+                data["state"] = "";
                 data["timestamp"] = t;
                 serializeJson(data, response);
 

@@ -52,6 +52,14 @@ void setup() {
     WiFi.softAP(ssid, pass);
     Serial.println(WiFi.softAPIP());
 
+    Server.on("/ui.css", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/ui.css", "text/css");
+    });
+
+    Server.on("/ui.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(LittleFS, "/ui.js", "text/javascript");
+    });
+
     Server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(LittleFS, "/index.html", "text/html");
     });
@@ -68,9 +76,9 @@ void setup() {
         Sensor.read();
         time(&t);
         data.clear();
-        data["az_axis"] = Actuator.az;
+        data["az_actuator"] = Actuator.az;
         data["az_sensor"] = Sensor.az;
-        data["el_axis"] = Actuator.el;
+        data["el_actuator"] = Actuator.el;
         data["el_sensor"] = Sensor.el;
         data["timestamp"] = t;
         serializeJson(data, response);

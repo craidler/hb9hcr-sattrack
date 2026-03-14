@@ -1,0 +1,87 @@
+body {
+    box-sizing: border-box;
+    font-family: monospace;
+    text-align: center;
+    padding: 0 1rem;
+    background: #333;
+    color: #fff;
+}
+
+h2 {
+    margin-top: 2rem;
+    background: #333;
+    padding: .5rem;
+    color: #111;
+}
+
+button {
+    min-height: 50px;
+}
+
+button:active {
+    background: #555 !important;
+}
+
+button.span {
+    grid-row: span 2;
+}
+
+.container {
+    margin: 0 auto;
+}
+
+.grid {
+    background: #383838;
+    border-radius: .5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1rem;
+    padding: .5rem;
+}
+
+.grid>* {
+    padding: .5rem;
+}
+
+.grid>button,
+.grid>input,
+.grid>span {
+    min-width: 0;
+    vertical-align: middle;
+    line-height: 3rem;
+    text-align: center;
+    color: #fff;
+}
+
+.grid>button,
+.grid>input,
+.grid>input:active {
+    background: #444;
+    border: 1px solid #aaa;
+}
+
+.grid>span {
+    border: 1px solid #444;
+}
+
+.mt {
+    margin-top: 1rem;
+}
+
+.header {
+    font-weight: 800;
+    font-size: 3rem;
+    display: table;
+    margin: 2rem auto;
+    color: #111;
+}
+
+.header>* {
+    vertical-align: middle;
+}
+
+.header img {
+    margin: 0 .25rem;
+    max-height: 4rem;
+}

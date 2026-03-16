@@ -7,173 +7,83 @@
 #include <string.h>
 
 #include "Sensor.h"
+#include "Servo.h"
 
 class HB9HCR_Actuator {
    private:
-    unsigned short i;
     JsonDocument data;
     String response;
     String command;
-    SMS_STS Servo;
-    time_t t;
+    SMS_STS Bus;
+    time_t ts;
+    float az, el;
     char c;
 
    public:
-    static constexpr float STP_DEG = 4096.0f / 360.0f;  // steps per degree
-    static constexpr int STP_TRN = 4096;                // steps per full turn
-    static constexpr int AZ_MAX = 3068;                 // cable tangling prevention
-    float az, el;
-    long az_p, el_p;
-
     HB9HCR_Actuator() {}
 
     AsyncWebServer* Server = nullptr;
     HB9HCR_Sensor* Sensor = nullptr;
+    HB9HCR_Servo Azimuth = HB9HCR_Servo(1);
+    HB9HCR_Servo Elevation = HB9HCR_Servo(2);
     USBCDC* Input = nullptr;
 
     void begin() {
         // initialize servos via UART
         Serial.print("actuator: servos on uart bus ");
         Serial0.begin(1000000, SERIAL_8N1, RX, TX);
-        while (!Serial0) delay(100);
-        Servo.pSerial = &Serial0;
+        while (!Serial0) delay(10);
+        Bus.pSerial = &Serial0;
 
-        // set servos to multi-turn mode
-        for (i = 1; i <= 2; i++) {
-            Servo.unLockEprom(i);
-            // servo mode 3 (relative)
-            Servo.writeByte(i, SMS_STS_MODE, 3);
-            // servo angle limits off
-            Servo.writeWord(i, 9, 0);
-            Servo.writeWord(i, 11, 0);
-            Servo.LockEprom(i);
-            Servo.EnableTorque(i, 1);
-        }
+        Azimuth.min = -4096;
+        Azimuth.max = +4096;
+        Azimuth.begin(&Bus);
 
+        Elevation.min = -1024;
+        Elevation.max = +1024;
+        Elevation.begin(&Bus);
         Serial.println("connected");
-
-        // calibrate actuator elevation
-        if (Sensor != nullptr) {
-            Serial.print("actuator: calibration ");
-
-            float el = 0;
-
-            for (int i = 0; i < 200; i++) {
-                el += Sensor->read()->el;
-                delay(5);
-            }
-
-            moveTo(0, -(el /= 200));
-            zero();
-
-            Serial.printf("done: %.2f\n", -el);
-        }
 
         if (Server != nullptr) {
             Serial.print("actuator: direct control webhandlers ");
 
-            // absolute movement
-            Server->on("/move", HTTP_GET, [this](AsyncWebServerRequest* request) {
-                if (!request->hasParam("axis") || !request->hasParam("target")) return;
-
-                moveTo(0 == request->getParam("axis")->value().compareTo("az") ? request->getParam("target")->value().toFloat() : 0,
-                       0 == request->getParam("axis")->value().compareTo("el") ? request->getParam("target")->value().toFloat() : 0);
-
-                data.clear();
-                time(&t);
-
-                data["az_degree"] = az;
-                data["el_degree"] = el;
-                data["az_position"] = az_p;
-                data["el_position"] = el_p;
-                data["timestamp"] = t;
-
-                serializeJson(data, response);
-
-                request->send(200, "application/json", response);
-            });
-
-            // relative movement
-            Server->on("/step", HTTP_GET, [this](AsyncWebServerRequest* request) {
-                if (!request->hasParam("axis") || !request->hasParam("step")) return;
-
-                move(0 == request->getParam("axis")->value().compareTo("az") ? request->getParam("step")->value().toInt() * STP_DEG : 0,
-                     0 == request->getParam("axis")->value().compareTo("el") ? request->getParam("step")->value().toInt() * STP_DEG : 0);
-
-                data.clear();
-                time(&t);
-
-                data["az_degree"] = az;
-                data["el_degree"] = el;
-                data["az_position"] = az_p;
-                data["el_position"] = el_p;
-                data["timestamp"] = t;
-
-                serializeJson(data, response);
-
+            // state
+            Server->on("/actuator", HTTP_GET, [this](AsyncWebServerRequest* request) {
+                serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
 
             // normalize
-            Server->on("/zero", HTTP_GET, [this](AsyncWebServerRequest* request) {
-                data.clear();
-                time(&t);
-                zero();
-
-                data["az_degree"] = az;
-                data["el_degree"] = el;
-                data["az_position"] = az_p;
-                data["el_position"] = el_p;
-                data["timestamp"] = t;
-
-                serializeJson(data, response);
-
+            Server->on("/actuator", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
+                HB9HCR_Servo* Axis = "az" == data["axis"] ? &Azimuth : &Elevation;
+                Axis->reset();
+                serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
 
+            // move
+            AsyncCallbackJsonWebHandler* moveHandler = new AsyncCallbackJsonWebHandler("/actuator", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+                data = json.as<JsonObject>();
+
+                if (data.isNull()) {
+                    data.clear();
+                    data["error"] = "invalid json";
+                    serializeJson(data, response);
+                    request->send(400, "application/json", response);
+                    return;
+                }
+
+                HB9HCR_Servo* Axis = "az" == data["axis"] ? &Azimuth : &Elevation;
+                "a" == data["mode"] ? Axis->to(data["value"]) : Axis->move(data["value"]);
+
+                serializeJson(*getJson(), response);
+                request->send(200, "application/json", response);
+            });
+
+            Server->addHandler(moveHandler);
+
             Serial.println("attached");
         }
-    }
-
-    // move axis a given amount of steps
-    void move(int az_t, int el_t) {
-        // TODO: build in some sort of queueing
-        if (0 != az_t) Servo.WritePosEx(1, az_t, 0, 50);
-        if (0 != el_t) Servo.WritePosEx(2, el_t, 0, 50);
-        az_p += az_t;
-        el_p += el_t;
-        az = (az_p % STP_TRN) / STP_DEG;
-        el = (el_p % STP_TRN) / STP_DEG;
-        delay(10);
-        while (Servo.ReadMove(1) || Servo.ReadMove(2));
-    }
-
-    // move axis to a specific position in degrees
-    void moveTo(float az_t, float el_t) {
-        float s = shortest(az, az_t);
-        float l = longest(s);
-        move((abs(az_p + s) < AZ_MAX ? s : l) * STP_DEG, el_t * STP_DEG - el_p);
-    }
-
-    // the long way of a angle (delta) in a 360° circle
-    float longest(float delta) {
-        if (delta > 0) return delta - 360.0f;
-        if (delta < 0) return delta + 360.0f;
-        return 0;
-    }
-
-    // the short way of an angle (delta) in a 360° circle
-    float shortest(float current, float target) {
-        float delta = target - current;
-        while (delta <= -180.0f) delta += 360.0f;
-        while (delta > 180.0f) delta -= 360.0f;
-        return delta;
-    }
-
-    // normalize current state of servos as point zero
-    void zero() {
-        az_p = az = 0;
-        el_p = el = 0;
     }
 
     // assemble commands from usb
@@ -193,65 +103,151 @@ class HB9HCR_Actuator {
         }
     }
 
-    // execute commands from usb
+    // execute commands from usb (hamlib compatible)
     void execute() {
-        unsigned short direction, speed;
-        float az_t, el_t;
-
-        // set position
-        if (2 == sscanf(command.c_str(), "P %f %f", &az_t, &el_t)) {
-            moveTo(az_t, el_t);
+        // move relative
+        if (2 == sscanf(command.c_str(), "D %f %f", &az, &el)) {
+            Azimuth.move(az);
+            Elevation.move(el);
             return;
         }
 
-        // get position
+        // move to absolute position of azimuth and elevation
+        if (2 == sscanf(command.c_str(), "P %f %f", &az, &el)) {
+            Azimuth.to(az);
+            Elevation.to(el);
+            return;
+        }
+
+        // run calibration
+        if (0 == strncmp("C", command.c_str(), 1)) {
+            calibrate();
+            return;
+        }
+
+        // get absolute position of azimuth and elevation
         if (0 == strncmp("p", command.c_str(), 1)) {
-            Serial.printf("%.2f %.2f", az, el);
+            Serial.printf("%.2f %.2f", Azimuth.degree, Elevation.degree);
             return;
         }
 
-        // move rotator, this is quite dangerous as there are no stop switches on the device
-        // azimuth can snap cables, elevation servo can hit physics
-        if (2 == sscanf(command.c_str(), "M %d %d", direction, speed)) {
-            switch (direction) {
-                case 1:
-                    Servo.WriteSpe(1, 0, 0);
-                    Servo.WriteSpe(2, 0, 0);
-                    return;
-
-                case 2:
-                case 3:
-                    Servo.WriteSpe(1, 2 == direction ? speed : -speed, 50);
-                    return;
-
-                case 4:
-                case 5:
-                    Servo.WriteSpe(2, 4 == direction ? speed : -speed, 50);
-                    return;
-
-                default:
-                    return;
-            }
-        }
-
-        // stop
-        if (0 == strncmp("S", command.c_str(), 1)) {
-            Servo.WriteSpe(1, 0, 0);
-            Servo.WriteSpe(2, 0, 0);
+        // move relative (less dangerous than the HAMLIB implementation)
+        if (2 == sscanf(command.c_str(), "M %f %f", &az, &el)) {
+            Azimuth.move(az);
+            Elevation.move(el);
             return;
         }
 
         // park
         if (0 == strncmp("K", command.c_str(), 1)) {
-            moveTo(0.0, 0.0);
+            Azimuth.home();
+            Elevation.home();
             return;
         }
 
-        // reset (zero)
+        // reset
         if (0 == strncmp("R", command.c_str(), 1)) {
-            zero();
+            Azimuth.reset();
+            Elevation.reset();
             return;
         }
+    }
+
+    void calibrate() {
+        // calibrate actuator elevation
+        if (Sensor != nullptr) {
+            // elevation
+            Serial.print("sensor  : actuator calibration elevation ");
+            Elevation.min = -512;
+            Elevation.max = +512;
+
+            Sensor->BMI160.read();
+            float x = Sensor->BMI160.a.x_f;
+            float y = Sensor->BMI160.a.y_f;
+            float z = Sensor->BMI160.a.z_f;
+            unsigned int i = 0;
+
+            for (i = 0; i < 200; i++) {
+                Sensor->BMI160.read();
+                x += Sensor->BMI160.a.x_f;
+                y += Sensor->BMI160.a.y_f;
+                z += Sensor->BMI160.a.z_f;
+            }
+
+            Sensor->BMI160.a.x_f = x / i;
+            Sensor->BMI160.a.y_f = y / i;
+            Sensor->BMI160.a.z_f = z / i;
+
+            el = Sensor->BMI160.pitch();
+            Elevation.move(-el * HB9HCR_Servo::RESOLUTION);
+            delay(100);
+            Elevation.min = 0;
+            Elevation.max = 1024;
+            Elevation.reset();
+            Serial.printf("done: delta %.2f°\n", -el);
+
+            /*
+            // azimuth
+            Serial.print("sensor  : actuator calibration azimuth ");
+
+            Sensor->BMM350.read();
+            float x_min = Sensor->BMM350.raw.x, x_max = Sensor->BMM350.raw.x;
+            float y_min = Sensor->BMM350.raw.y, y_max = Sensor->BMM350.raw.y;
+            float z_min = Sensor->BMM350.raw.z, z_max = Sensor->BMM350.raw.z;
+            int s = 0;
+
+            Elevation.to(90);
+            Azimuth.move(-2048);
+            Azimuth.speed = 4096 / 20;
+            Azimuth.move(4096);
+            delay(10);
+
+            while (Azimuth.moving()) {
+                Sensor->BMM350.read();
+                x_min = Sensor->BMM350.raw.x < x_min ? Sensor->BMM350.raw.x : x_min;
+                x_max = Sensor->BMM350.raw.x > x_max ? Sensor->BMM350.raw.x : x_max;
+                y_min = Sensor->BMM350.raw.y < y_min ? Sensor->BMM350.raw.y : y_min;
+                y_max = Sensor->BMM350.raw.y > y_max ? Sensor->BMM350.raw.y : y_max;
+                z_min = Sensor->BMM350.raw.z < z_min ? Sensor->BMM350.raw.z : z_min;
+                z_max = Sensor->BMM350.raw.z > z_max ? Sensor->BMM350.raw.z : z_max;
+                s++;
+            }
+
+            // set offsets (hard iron)
+            Sensor->BMM350.offset.x = (x_max + x_min) / 2.0f;
+            Sensor->BMM350.offset.y = (y_max + y_min) / 2.0f;
+            Sensor->BMM350.offset.z = (z_max + z_min) / 2.0f;
+
+            // set scale (soft iron)
+            float x_rng = x_max - x_min;
+            float y_rng = y_max - y_min;
+            float z_rng = z_max - z_min;
+            float a_rng = (y_rng + z_rng) / 2.0f;
+            Sensor->BMM350.scale.x = a_rng / x_rng;
+            Sensor->BMM350.scale.y = a_rng / y_rng;
+            Sensor->BMM350.scale.z = a_rng / z_rng;
+
+            Azimuth.speed = 0;
+            Azimuth.home();
+            delay(1000);
+            float d = Sensor->read()->az;
+            Elevation.home();
+            Serial.printf("done: delta %.2f° samples %d\n", d, s);
+            */
+        }
+    }
+
+    JsonDocument* getJson() {
+        data.clear();
+        time(&ts);
+
+        data["az_deg"] = Azimuth.degree;
+        data["el_deg"] = Elevation.degree;
+        data["az_pos"] = Azimuth.position;
+        data["el_pos"] = Elevation.position;
+        data["ts"] = ts;
+
+        return &data;
     }
 };
 

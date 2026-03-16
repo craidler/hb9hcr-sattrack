@@ -26,7 +26,7 @@ class HB9HCR_Clock {
         struct timeval tv = { .tv_sec = now, .tv_usec = 0 };
         settimeofday(&tv, NULL);
 
-        Serial.printf("clock: synched and set to %ld\n", now);
+        Serial.printf("clock   : synched and set to %ld\n", now);
     }
 
     bool datetime(String &dt) {

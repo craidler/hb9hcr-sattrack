@@ -2,7 +2,6 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include <WiFi.h>
-#include <time.h>
 
 #include "Actuator.h"
 #include "Tracker.h"
@@ -11,16 +10,12 @@
 
 const char* ssid = "YOUR_SSID";
 const char* pass = "YOUR_PASSWORD";
-char datetime[20];
 
 AsyncWebServer Server(80);
 HB9HCR_Actuator Actuator;
 HB9HCR_Tracker Tracker;
 HB9HCR_Sensor Sensor;
 HB9HCR_Clock Clock;
-JsonDocument data;
-String response;
-time_t t;
 
 void setup() {
     Serial.begin(115200);
@@ -47,7 +42,7 @@ void setup() {
 
     Serial.println("mounted");
 
-    Serial.print("wifi: access point ");
+    Serial.print("wifi    : access point ");
     WiFi.softAP(ssid, pass);
     Serial.println(WiFi.softAPIP());
 
@@ -69,19 +64,6 @@ void setup() {
 
     Server.on("/symbol.svg", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(LittleFS, "/symbol.svg", "image/svg+xml");
-    });
-
-    Server.on("/data", HTTP_GET, [](AsyncWebServerRequest* request) {
-        Sensor.read();
-        time(&t);
-        data.clear();
-        data["az_actuator"] = Actuator.az;
-        data["az_sensor"] = Sensor.az;
-        data["el_actuator"] = Actuator.el;
-        data["el_sensor"] = Sensor.el;
-        data["timestamp"] = t;
-        serializeJson(data, response);
-        request->send(200, "application/json", response);
     });
 
     Server.begin();

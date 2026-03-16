@@ -16,7 +16,7 @@
             <img src="symbol.svg" alt="symbol">
             <span>HCR</span>
         </div>
-        <h2>PASS CONFIGURATION</h2>
+        <h2>TRACKER</h2>
         <div class="grid mt">
             <span>AOS AZ&deg;</span>
             <span>AOS EL&deg;</span>
@@ -30,7 +30,7 @@
             <input id="los_el" type="text" placeholder="0" autocomplete="off">
             <span>AOS</span>
             <input id="aos" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM" autocomplete="off">
-            <span id="time">--:--:--</span>
+            <span id="ts">--:--:--</span>
             <input id="los" type="text" pattern="[0-9]{2}:[0-9]{2}" placeholder="HH:MM" autocomplete="off">
             <span>LOS</span>
             <span id="state">IDLE</span>
@@ -39,52 +39,53 @@
             <button name="execute">EXE</button>
             <span>T-<span id="cd">0</span><span>s</span></span>
         </div>
-        <h2>DIRECT CONTROL</h2>
+        <h2>ACTUATOR</h2>
         <div class="grid mt">
-            <span>Axis</span>
+            <span>ACT</span>
             <span>
-                <span id="az_actuator">0</span><span>&deg;</span>
+                <span id="az_deg">0</span><span>&deg;</span>
             </span>
             <span><strong>AZIMUTH</strong></span>
             <span>
-                <span id="az_sensor">0</span><span>&deg;</span>
+                <span id="az_sen">0</span><span>&deg;</span>
             </span>
-            <span>Sensor</span>
-            <button data-axis="az" data-target="270" class="span">270&deg;</button>
-            <button data-axis="az" data-target="315">315&deg;</button>
-            <button data-axis="az" data-target="0">0&deg;</button>
-            <button data-axis="az" data-target="45">45&deg;</button>
-            <button data-axis="az" data-target="90" class="span">90&deg;</button>
-            <button data-axis="az" data-target="225">225&deg;</button>
-            <button data-axis="az" data-target="180">180&deg;</button>
-            <button data-axis="az" data-target="135">135&deg;</button>
-            <button data-axis="az" data-step="-10">-10&deg;</button>
-            <button data-axis="az" data-step="-1">-1&deg;</button>
-            <button data-zero="az">NRM</button>
-            <button data-axis="az" data-step="+1">+1&deg;</button>
-            <button data-axis="az" data-step="+10">+10&deg;</button>
+            <span>SEN</span>
+            <button name="move" data-axis="az" data-mode="a" value="270" class="span">270&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="315">315&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="0">0&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="45">45&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="90" class="span">90&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="225">225&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="180">180&deg;</button>
+            <button name="move" data-axis="az" data-mode="a" value="135">135&deg;</button>
+            <button name="move" data-axis="az" data-mode="r" value="-10">-10&deg;</button>
+            <button name="move" data-axis="az" data-mode="r" value="-1">-1&deg;</button>
+            <button name="zero" data-axis="az">NRM</button>
+            <button name="move" data-axis="az" data-mode="r" value="+1">+1&deg;</button>
+            <button name="move" data-axis="az" data-mode="r" value="+10">+10&deg;</button>
         </div>
         <div class="grid mt">
-            <span>Axis</span>
+            <span>ACT</span>
             <span>
-                <span id="el_actuator">0</span><span>&deg;</span>
+                <span id="el_deg">0</span><span>&deg;</span>
             </span>
             <span><strong>ELEVATION</strong></span>
             <span>
-                <span id="el_sensor">0</span><span>&deg;</span>
+                <span id="el_sen">0</span><span>&deg;</span>
             </span>
-            <span>Sensor</span>
-            <button data-axis="el" data-target="0">0&deg;</button>
-            <button data-axis="el" data-target="22.5">22.5&deg;</button>
-            <button data-axis="el" data-target="45">45&deg;</button>
-            <button data-axis="el" data-target="67.5">67.5&deg;</button>
-            <button data-axis="el" data-target="90">90&deg;</button>
-            <button data-axis="el" data-step="-10">-10&deg;</button>
-            <button data-axis="el" data-step="-1">-1&deg;</button>
-            <button data-zero="el">NRM</button>
-            <button data-axis="el" data-step="+1">+1&deg;</button>
-            <button data-axis="el" data-step="+10">+10&deg;</button>
+            <span>SEN</span>
+            <button name="move" data-axis="el" data-mode="a" value="0">0&deg;</button>
+            <button name="move" data-axis="el" data-mode="a" value="22.5">22.5&deg;</button>
+            <button name="move" data-axis="el" data-mode="a" value="45">45&deg;</button>
+            <button name="move" data-axis="el" data-mode="a" value="67.5">67.5&deg;</button>
+            <button name="move" data-axis="el" data-mode="a" value="90">90&deg;</button>
+            <button name="move" data-axis="el" data-mode="r" value="-10">-10&deg;</button>
+            <button name="move" data-axis="el" data-mode="r" value="-1">-1&deg;</button>
+            <button name="zero" data-axis="el">NRM</button>
+            <button name="move" data-axis="el" data-mode="r" value="+1">+1&deg;</button>
+            <button name="move" data-axis="el" data-mode="r" value="+10">+10&deg;</button>
         </div>
+        <p>2026 HB9HCR Sattrack</p>
     </div>
     <script src="ui.js"></script>
 </body>

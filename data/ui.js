@@ -10,84 +10,106 @@ function set(id, value) {
     document.querySelector('#' + id).innerText = value;
 }
 
-function setControl(data) {
-    const date = new Date(data.timestamp * 1000);
-    set('az_actuator', data.az_degree.toFixed(2));
-    set('el_actuator', data.el_degree.toFixed(2));
-    set('az_sensor', data.az_sensor.toFixed(2));
-    set('el_sensor', data.el_sensor.toFixed(2));
-    set('time', date.getHours().toString().padStart(2, '0') +
+function setActuator(data) {
+    const date = new Date(data.ts * 1000);
+    set('az_deg', data.az_deg.toFixed(2));
+    set('el_deg', data.el_deg.toFixed(2));
+    set('az_pos', data.az_pos.toFixed(2));
+    set('el_pos', data.el_pos.toFixed(2));
+    set('ts', date.getHours().toString().padStart(2, '0') +
         date.getMinutes().toString().padStart(2, '0') +
         date.getSeconds().toString().padStart(2, '0'));
 }
 
-function setPass(data) {
-    const date = new Date(data.timestamp * 1000);
+function setTracker(data) {
+    const date = new Date(data.ts * 1000);
+    // TODO: set aos & los
     set('aos_az', data.aos_az);
     set('aos_el', data.aos_el);
     set('los_az', data.los_az);
     set('los_el', data.los_el);
     set('max_el', data.max_el);
     set('state', data.state);
-    set('time', String(date.getHours()).padStart(2, '0') + ':' +
+    set('cd', data.cd);
+    set('ts', String(date.getHours()).padStart(2, '0') + ':' +
         String(date.getMinutes()).padStart(2, '0') + ':' +
         String(date.getSeconds()).padStart(2, '0'));
 }
 
-setInterval(function () {
-    fetch('/data').then(response => response.json()).then(data => setControl(data));
-}, 10000);
-
-let debug = document.querySelector('#debug');
-
-document.querySelectorAll('button[data-axis][data-target]').forEach(element => {
-    element.addEventListener('click', () => {
-        let url = new URL('/move');
-        url.searchParams.append('axis', element.dataset.axis);
-        url.searchParams.append('target', element.dataset.target);
-        fetch(url).then(response => response.json()).then(data => setControl(data));
+document.querySelectorAll('button[name="move"]').forEach(el => {
+    el.addEventListener('click', () => {
+        fetch('/actuator', {
+            method: 'POST',
+            headers: { 'Content-type': 'application/json' },
+            body: JSON.stringify({
+                mode: el.dataset.mode,
+                az: parseFloat('az' === el.dataset.axis ? el.value : 0),
+                el: parseFloat('el' === el.dataset.axis ? el.value : 0),
+            }),
+        }).then(r => {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+        }).then(d => setActuator(d)).catch(e => {
+            console.log(e.message);
+        });
     });
 });
 
-document.querySelectorAll('button[data-axis][data-step]').forEach(element => {
-    element.addEventListener('click', () => {
-        let url = new URL('/step');
-        url.searchParams.append('axis', element.dataset.axis);
-        url.searchParams.append('step', element.dataset.step);
-        fetch(url).then(response => response.json()).then(data => setControl(data));
-    });
-});
-
-document.querySelectorAll('button[data-zero]').forEach(element => {
-    element.addEventListener('click', () => {
-        let url = new URL('/zero');
-        url.searchParams.append('axis', element.dataset.zero);
-        fetch(url).then(response => response.json()).then(data => setControl(data));
+document.querySelectorAll('button[name="zero"]').forEach(el => {
+    el.addEventListener('click', () => {
+        fetch('/actuator', {
+            method: 'DELETE',
+            headers: { 'Content-type': 'application/json' },
+        }).then(r => {
+            if (!r.ok) throw new Error(r.status);
+            return r.json();
+        }).then(d => setActuator(d)).catch(e => {
+            console.log(e.message);
+        });
     });
 });
 
 document.querySelector('button[name="execute"]').addEventListener('click', () => {
-    fetch('/execute').then(response => response.json()).then(data => setPass(data));
+    fetch('/tracker', {
+        method: 'POST',
+        headers: { 'Content-type': 'application/json' },
+    }).then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(d => setTracker(d)).catch(e => {
+        console.log(e.message);
+    });
 });
 
 document.querySelector('button[name="clear"]').addEventListener('click', () => {
-    fetch('/clear').then(response => response.json()).then(data => setPass(data));
+    fetch('/tracker', {
+        method: 'DELETE',
+        headers: { 'Content-type': 'application/json' },
+    }).then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(d => setTracker(d)).catch(e => {
+        console.log(e.message);
+    });
 });
 
 document.querySelector('button[name="set"]').addEventListener('click', () => {
-    const data = {
-        'aos': timestamp('aos'),
-        'los': timestamp('los'),
-        'aos_az': parseInt(document.querySelector('#aos_az').value) || 0,
-        'aos_el': parseInt(document.querySelector('#aos_el').value) || 0,
-        'los_az': parseInt(document.querySelector('#los_az').value) || 0,
-        'los_el': parseInt(document.querySelector('#los_el').value) || 0,
-        'max_el': parseInt(document.querySelector('#max_el').value) || 0,
-    };
-
-    fetch('/set', {
-        method: 'POST',
+    fetch('/tracker', {
+        method: 'PATCH',
         headers: { 'Content-type': 'application/json' },
-        body: JSON.stringify(data),
-    }).then(response => response.json()).then(data => setPass(data));
+        body: JSON.stringify({
+            'aos': timestamp('aos'),
+            'los': timestamp('los'),
+            'aos_az': parseInt(document.querySelector('#aos_az').value) || 0,
+            'aos_el': parseInt(document.querySelector('#aos_el').value) || 0,
+            'los_az': parseInt(document.querySelector('#los_az').value) || 0,
+            'los_el': parseInt(document.querySelector('#los_el').value) || 0,
+            'max_el': parseInt(document.querySelector('#max_el').value) || 0,
+        }),
+    }).then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+    }).then(d => setTracker(d)).catch(e => {
+        console.log(e.message);
+    });
 });

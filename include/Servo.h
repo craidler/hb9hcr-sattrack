@@ -38,7 +38,8 @@ class HB9HCR_Servo {
         to(0);
     }
 
-    // move an amount of steps
+    // move an amount of steps 
+    // TODO: figure out a ring buffer and queue these commands to achieve non-blocking
     void move(int step) {
         if (position + step < min || position + step > max) return;
         while (moving()) delay(5);
@@ -48,6 +49,7 @@ class HB9HCR_Servo {
         delay(5);
     }
 
+    // check if this servo is moving
     bool moving() {
         return 0 != Bus->ReadMove(ID);
     }

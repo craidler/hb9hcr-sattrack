@@ -6,6 +6,7 @@
 #include <SCServo.h>
 #include <string.h>
 
+#include "Clock.h"
 #include "Sensor.h"
 #include "Servo.h"
 
@@ -26,6 +27,7 @@ class HB9HCR_Actuator {
     HB9HCR_Sensor* Sensor = nullptr;
     HB9HCR_Servo Azimuth = HB9HCR_Servo(1);
     HB9HCR_Servo Elevation = HB9HCR_Servo(2);
+    HB9HCR_Clock* Clock;
     USBCDC* Input = nullptr;
 
     void begin() {
@@ -55,7 +57,7 @@ class HB9HCR_Actuator {
 
             // normalize
             Server->on("/actuator", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
-                HB9HCR_Servo* Axis = "az" == data["axis"] ? &Azimuth : &Elevation;
+                HB9HCR_Servo* Axis = (data["axis"] == "az") ? &Azimuth : &Elevation;
                 Axis->reset();
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
@@ -73,8 +75,8 @@ class HB9HCR_Actuator {
                     return;
                 }
 
-                HB9HCR_Servo* Axis = "az" == data["axis"] ? &Azimuth : &Elevation;
-                "a" == data["mode"] ? Axis->to(data["value"]) : Axis->move(data["value"]);
+                HB9HCR_Servo* Axis = (data["axis"] == "az") ? &Azimuth : &Elevation;
+                (data["mode"] == "a") ? Axis->to(data["value"]) : Axis->move(((float)data["value"] * HB9HCR_Servo::RESOLUTION));
 
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
@@ -107,8 +109,8 @@ class HB9HCR_Actuator {
     void execute() {
         // move relative
         if (2 == sscanf(command.c_str(), "D %f %f", &az, &el)) {
-            Azimuth.move(az);
-            Elevation.move(el);
+            Azimuth.move(int(az));
+            Elevation.move(int(el));
             return;
         }
 
@@ -125,16 +127,23 @@ class HB9HCR_Actuator {
             return;
         }
 
+        // sensor reading
+        if (0 == strncmp("S", command.c_str(), 1)) {
+            Sensor->read();
+            Serial.printf("az: %.2f° el: %.2f°\n", Sensor->azimuth, Sensor->elevation);
+            return;
+        }
+
         // get absolute position of azimuth and elevation
         if (0 == strncmp("p", command.c_str(), 1)) {
-            Serial.printf("%.2f %.2f", Azimuth.degree, Elevation.degree);
+            Serial.printf("%.2f %.2f\n", Azimuth.degree, Elevation.degree);
             return;
         }
 
         // move relative (less dangerous than the HAMLIB implementation)
         if (2 == sscanf(command.c_str(), "M %f %f", &az, &el)) {
-            Azimuth.move(az);
-            Elevation.move(el);
+            Azimuth.move(int(az));
+            Elevation.move(int(el));
             return;
         }
 
@@ -157,7 +166,7 @@ class HB9HCR_Actuator {
         // calibrate actuator elevation
         if (Sensor != nullptr) {
             // elevation
-            Serial.print("sensor  : actuator calibration elevation ");
+            Serial.print("actuator: calibration elevation ");
             Elevation.min = -512;
             Elevation.max = +512;
 
@@ -184,68 +193,18 @@ class HB9HCR_Actuator {
             Elevation.min = 0;
             Elevation.max = 1024;
             Elevation.reset();
-            Serial.printf("done: delta %.2f°\n", -el);
-
-            /*
-            // azimuth
-            Serial.print("sensor  : actuator calibration azimuth ");
-
-            Sensor->BMM350.read();
-            float x_min = Sensor->BMM350.raw.x, x_max = Sensor->BMM350.raw.x;
-            float y_min = Sensor->BMM350.raw.y, y_max = Sensor->BMM350.raw.y;
-            float z_min = Sensor->BMM350.raw.z, z_max = Sensor->BMM350.raw.z;
-            int s = 0;
-
-            Elevation.to(90);
-            Azimuth.move(-2048);
-            Azimuth.speed = 4096 / 20;
-            Azimuth.move(4096);
-            delay(10);
-
-            while (Azimuth.moving()) {
-                Sensor->BMM350.read();
-                x_min = Sensor->BMM350.raw.x < x_min ? Sensor->BMM350.raw.x : x_min;
-                x_max = Sensor->BMM350.raw.x > x_max ? Sensor->BMM350.raw.x : x_max;
-                y_min = Sensor->BMM350.raw.y < y_min ? Sensor->BMM350.raw.y : y_min;
-                y_max = Sensor->BMM350.raw.y > y_max ? Sensor->BMM350.raw.y : y_max;
-                z_min = Sensor->BMM350.raw.z < z_min ? Sensor->BMM350.raw.z : z_min;
-                z_max = Sensor->BMM350.raw.z > z_max ? Sensor->BMM350.raw.z : z_max;
-                s++;
-            }
-
-            // set offsets (hard iron)
-            Sensor->BMM350.offset.x = (x_max + x_min) / 2.0f;
-            Sensor->BMM350.offset.y = (y_max + y_min) / 2.0f;
-            Sensor->BMM350.offset.z = (z_max + z_min) / 2.0f;
-
-            // set scale (soft iron)
-            float x_rng = x_max - x_min;
-            float y_rng = y_max - y_min;
-            float z_rng = z_max - z_min;
-            float a_rng = (y_rng + z_rng) / 2.0f;
-            Sensor->BMM350.scale.x = a_rng / x_rng;
-            Sensor->BMM350.scale.y = a_rng / y_rng;
-            Sensor->BMM350.scale.z = a_rng / z_rng;
-
-            Azimuth.speed = 0;
-            Azimuth.home();
-            delay(1000);
-            float d = Sensor->read()->az;
-            Elevation.home();
-            Serial.printf("done: delta %.2f° samples %d\n", d, s);
-            */
+            Serial.printf("done: %.2f°\n", -el);
         }
     }
 
     JsonDocument* getJson() {
         data.clear();
-        time(&ts);
 
         data["az_deg"] = Azimuth.degree;
         data["el_deg"] = Elevation.degree;
         data["az_pos"] = Azimuth.position;
         data["el_pos"] = Elevation.position;
-        data["ts"] = ts;
+        data["time"] = Clock->getEpoch();
 
         return &data;
     }

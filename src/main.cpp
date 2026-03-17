@@ -24,6 +24,7 @@ void setup() {
     Clock.begin();
     Sensor.begin();
 
+    Actuator.Clock = &Clock;
     Actuator.Input = &Serial;
     Actuator.Sensor = &Sensor;
     Actuator.Server = &Server;
@@ -31,6 +32,7 @@ void setup() {
 
     Tracker.Actuator = &Actuator;
     Tracker.Server = &Server;
+    Tracker.Clock = &Clock;
     Tracker.begin();
 
     Serial.print("littlefs: ");

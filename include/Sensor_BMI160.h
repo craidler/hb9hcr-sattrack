@@ -43,7 +43,7 @@ class HB9HCR_BMI160 {
     }
 
     float pitch() {
-        // return atan2(a.y_f, sqrt(a.x_f * a.x_f + a.z_f * a.z_f)) * 180.0 / PI; // x points forward
+        // return atan2(a.y_f, sqrt(a.x_f * a.x_f + a.z_f * a.z_f)) * 180.0 / PI; // y points forward
         return atan2(a.z_f, sqrt(a.x_f * a.x_f + a.y_f * a.y_f)) * 180.0 / PI;  // z points forward
     }
 };

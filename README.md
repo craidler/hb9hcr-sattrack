@@ -95,4 +95,8 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 
 
 
-dont forget: upload_protocol = esptool
+dont forget: 
+```
+upload_protocol = esptool
+build_src_filter = +<*> -<main.cpp> +<../test/actuator.cpp>
+```

@@ -6,10 +6,11 @@
 #include <string.h>
 
 #include "Actuator.h"
+#include "Clock.h"
 
 class HB9HCR_Tracker {
    private:
-    unsigned short aos_az, aos_el, los_az, los_el, max_el;
+    unsigned short aos_az, aos_el, los_az, los_el, max_el; // TODO: move these to a struct: az,el,ts
     JsonDocument data;
     String response;
     time_t aos, max, los, cd, ts;
@@ -25,6 +26,7 @@ class HB9HCR_Tracker {
 
     HB9HCR_Actuator* Actuator = nullptr;
     AsyncWebServer* Server = nullptr;
+    HB9HCR_Clock* Clock;
     State State = State::IDLE;
 
     HB9HCR_Tracker() {}
@@ -54,9 +56,17 @@ class HB9HCR_Tracker {
                 request->send(200, "application/json", response);
             });
 
+            // execute
+            AsyncCallbackJsonWebHandler* executeHandler = new AsyncCallbackJsonWebHandler("/tracker", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+                if ("POST" != request->methodToString()) return;
+                State = State::EXECUTE;
+                serializeJson(*getJson(), response);
+                request->send(200, "application/json", response);
+            });
+
             // config
             AsyncCallbackJsonWebHandler* configHandler = new AsyncCallbackJsonWebHandler("/tracker", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-                if ("PATCH" != request->methodToString()) return;
+                if ("PUT" != request->methodToString()) return;
 
                 State = State::IDLE;
                 data = json.as<JsonObject>();
@@ -81,15 +91,31 @@ class HB9HCR_Tracker {
                 request->send(200, "application/json", response);
             });
 
-            // execute
-            AsyncCallbackJsonWebHandler* executeHandler = new AsyncCallbackJsonWebHandler("/tracker", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+            // time
+            AsyncCallbackJsonWebHandler* timeHandler = new AsyncCallbackJsonWebHandler("/time", [this](AsyncWebServerRequest* request, JsonVariant& json) {
                 if ("POST" != request->methodToString()) return;
-                State = State::EXECUTE;
-                serializeJson(*getJson(), response);
+
+                data = json.as<JsonObject>();
+
+                if (data.isNull()) {
+                    data.clear();
+                    data["error"] = "invalid json";
+                    serializeJson(data, response);
+                    request->send(400, "application/json", response);
+                    return;
+                }
+
+                Clock->setTime(long(data["now"]));
+                data.clear();
+                data["time"] = Clock->getEpoch();
+
+                serializeJson(data, response);
                 request->send(200, "application/json", response);
             });
 
+            Server->addHandler(executeHandler);
             Server->addHandler(configHandler);
+            Server->addHandler(timeHandler);
         }
 
         Serial.println("attached");
@@ -99,8 +125,6 @@ class HB9HCR_Tracker {
     void loop() {
         // idling ...
         if (State::IDLE == State) return;
-
-        time(&ts);
 
         // exe button was pressed, validate configuration, if fine move to initial position and pass on to standby
         if (State::EXECUTE == State) {
@@ -122,20 +146,20 @@ class HB9HCR_Tracker {
 
         // wait until aos and pass on to track
         if (State::STANDBY == State) {
-            if (ts >= aos) {
+            if (Clock->getEpoch() >= aos) {
                 Serial.println("tracker: STANDBY to TRACK");
                 State = State::TRACK;
                 cd = 0;
                 return;
             }
 
-            cd = aos - ts;
+            cd = aos - Clock->getEpoch();
             return;
         }
 
         // track satellite pass, if los pass to park
         if (State::TRACK == State) {
-            if (ts >= los) {
+            if (Clock->getEpoch() >= los) {
                 Serial.println("tracker: TRACK to PARK");
                 State = State::PARK;
                 cd = 0;
@@ -151,7 +175,7 @@ class HB9HCR_Tracker {
             }
 
             Serial.printf("actuator: move to %.2f°:%.2f°\n", az, el);
-            cd = los - ts;
+            cd = los - Clock->getEpoch();
             return;
         }
 
@@ -175,8 +199,7 @@ class HB9HCR_Tracker {
 
     // validate pass configuration
     bool valid() {
-        time(&ts);
-        if (ts > aos + 10) return false;      // check for 10 seconds lead
+        if (Clock->getEpoch() > aos + 10) return false;      // check for 10 seconds lead
         if (aos + 60 >= los) return false;   // check for 60 seconds minimum pass duration
         if (aos_az == los_az) return false;  // check for different aos and los az
         return true;
@@ -185,15 +208,13 @@ class HB9HCR_Tracker {
     // calculate progress based on passed time
     float progress() {
         // TODO: prevent division by zero
-        time(&ts);
-        unsigned int duration = los - aos;
-        unsigned int progress = ts - aos;
+        long duration = los - aos;
+        float progress = Clock->getEpoch() - aos;
         return progress / duration;
     }
 
     JsonDocument* getJson() {
         data.clear();
-        time(&ts);
 
         data["aos"] = aos;
         data["los"] = los;
@@ -204,7 +225,7 @@ class HB9HCR_Tracker {
         data["max_el"] = max_el;
         data["state"] = stateToString();
         data["cd"] = cd;
-        data["ts"] = ts;
+        data["time"] = Clock->getEpoch();
 
         return &data;
     }

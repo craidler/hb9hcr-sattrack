@@ -56,9 +56,14 @@ class HB9HCR_Actuator {
             });
 
             // normalize
-            Server->on("/actuator", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
-                HB9HCR_Servo* Axis = (data["axis"] == "az") ? &Azimuth : &Elevation;
-                Axis->reset();
+            Server->on("/actuator/az", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
+                Azimuth.reset();
+                serializeJson(*getJson(), response);
+                request->send(200, "application/json", response);
+            });
+
+            Server->on("/actuator/el", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
+                Elevation.reset();
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
@@ -75,8 +80,12 @@ class HB9HCR_Actuator {
                     return;
                 }
 
-                HB9HCR_Servo* Axis = (data["axis"] == "az") ? &Azimuth : &Elevation;
-                (data["mode"] == "a") ? Axis->to(data["value"]) : Axis->move(((float)data["value"] * HB9HCR_Servo::RESOLUTION));
+                float value = data["value"].as<float>();
+                String mode = data["mode"].as<String>();
+                String axis = data["axis"].as<String>();
+
+                HB9HCR_Servo* Axis = ("az" == axis.c_str()) ? &Azimuth : &Elevation;
+                ("a" == mode.c_str()) ? Axis->to(value) : Axis->move(value * HB9HCR_Servo::RESOLUTION);
 
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);

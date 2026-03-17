@@ -10,11 +10,17 @@
 
 class HB9HCR_Tracker {
    private:
-    unsigned short aos_az, aos_el, los_az, los_el, max_el; // TODO: move these to a struct: az,el,ts
+    struct TrackingPoint {
+        unsigned long time = 0;
+        unsigned short az = 0;
+        unsigned short el = 0;
+    };
+
+    TrackingPoint aos, mel, los;
     JsonDocument data;
     String response;
-    time_t aos, max, los, cd, ts;
-
+    long cd;
+    
    public:
     enum class State {
         IDLE,
@@ -26,7 +32,7 @@ class HB9HCR_Tracker {
 
     HB9HCR_Actuator* Actuator = nullptr;
     AsyncWebServer* Server = nullptr;
-    HB9HCR_Clock* Clock;
+    HB9HCR_Clock* Clock = nullptr;
     State State = State::IDLE;
 
     HB9HCR_Tracker() {}
@@ -38,13 +44,10 @@ class HB9HCR_Tracker {
             // reset
             Server->on("/tracker", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
                 State = State::IDLE;
-                aos = 0;
-                los = 0;
-                aos_az = 0;
-                aos_el = 0;
-                los_az = 0;
-                los_el = 0;
-                max_el = 0;
+                
+                aos.time = aos.az = aos.el = 0;
+                mel.time = mel.az = mel.el = 0;
+                los.time = los.az = los.el = 0;
 
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
@@ -56,9 +59,9 @@ class HB9HCR_Tracker {
                 request->send(200, "application/json", response);
             });
 
+
             // execute
-            AsyncCallbackJsonWebHandler* executeHandler = new AsyncCallbackJsonWebHandler("/tracker", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-                if ("POST" != request->methodToString()) return;
+            Server->on("/tracker", HTTP_POST, [this](AsyncWebServerRequest* request) {
                 State = State::EXECUTE;
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
@@ -79,13 +82,15 @@ class HB9HCR_Tracker {
                     return;
                 }
 
-                aos = data["aos"];
-                los = data["los"];
-                aos_az = data["aos_az"];
-                aos_el = data["aos_el"];
-                los_az = data["los_az"];
-                los_el = data["los_el"];
-                max_el = data["max_el"];
+                aos.time = data["aos"].as<long>();
+                aos.az = data["aos_az"].as<short>();
+                aos.el = data["aos_el"].as<short>();                
+                los.time = data["los"].as<long>();
+                los.az = data["los_az"].as<short>();
+                los.el = data["los_el"].as<short>();
+                mel.time = aos.time + (los.time - aos.time) / 2;
+                mel.az = 0; // TODO: for beauty's sake ...
+                mel.el = data["max_el"].as<short>();
 
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
@@ -93,8 +98,6 @@ class HB9HCR_Tracker {
 
             // time
             AsyncCallbackJsonWebHandler* timeHandler = new AsyncCallbackJsonWebHandler("/time", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-                if ("POST" != request->methodToString()) return;
-
                 data = json.as<JsonObject>();
 
                 if (data.isNull()) {
@@ -105,7 +108,7 @@ class HB9HCR_Tracker {
                     return;
                 }
 
-                Clock->setTime(long(data["now"]));
+                Clock->setTime(data["now"].as<long>());
                 data.clear();
                 data["time"] = Clock->getEpoch();
 
@@ -113,7 +116,6 @@ class HB9HCR_Tracker {
                 request->send(200, "application/json", response);
             });
 
-            Server->addHandler(executeHandler);
             Server->addHandler(configHandler);
             Server->addHandler(timeHandler);
         }
@@ -135,8 +137,8 @@ class HB9HCR_Tracker {
             }
 
             if (Actuator != nullptr) {
-                Actuator->Azimuth.to(aos_az);
-                Actuator->Elevation.to(aos_el);
+                Actuator->Azimuth.to(aos.az);
+                Actuator->Elevation.to(aos.el);
             }
             
             Serial.println("tracker: EXECUTE to STANDBY");
@@ -146,20 +148,20 @@ class HB9HCR_Tracker {
 
         // wait until aos and pass on to track
         if (State::STANDBY == State) {
-            if (Clock->getEpoch() >= aos) {
+            if (Clock->getEpoch() >= aos.time) {
                 Serial.println("tracker: STANDBY to TRACK");
                 State = State::TRACK;
                 cd = 0;
                 return;
             }
 
-            cd = aos - Clock->getEpoch();
+            cd = aos.time - Clock->getEpoch();
             return;
         }
 
         // track satellite pass, if los pass to park
         if (State::TRACK == State) {
-            if (Clock->getEpoch() >= los) {
+            if (Clock->getEpoch() >= los.time) {
                 Serial.println("tracker: TRACK to PARK");
                 State = State::PARK;
                 cd = 0;
@@ -175,15 +177,15 @@ class HB9HCR_Tracker {
             }
 
             Serial.printf("actuator: move to %.2f°:%.2f°\n", az, el);
-            cd = los - Clock->getEpoch();
+            cd = los.time - Clock->getEpoch();
             return;
         }
 
         // park actuator and pass on to idle
         if (State::PARK == State) {
             if (Actuator != nullptr) {
-                Actuator->Azimuth.to(aos_az);
-                Actuator->Elevation.to(aos_el);
+                Actuator->Azimuth.to(aos.az);
+                Actuator->Elevation.to(aos.el);
             }
 
             Serial.println("tracker: PARK to IDLE");
@@ -194,38 +196,46 @@ class HB9HCR_Tracker {
 
     // calculate the current target angles for both axis based on progress
     bool current(float* az, float* el) {
+        // TODO: azimuth linear, elevation sinusoidal
         return true;
     }
 
     // validate pass configuration
     bool valid() {
-        if (Clock->getEpoch() > aos + 10) return false;      // check for 10 seconds lead
-        if (aos + 60 >= los) return false;   // check for 60 seconds minimum pass duration
-        if (aos_az == los_az) return false;  // check for different aos and los az
+        if (Clock->getEpoch() > aos.time + 10) return false; // check for 10 seconds lead
+        if (aos.time + 60 >= los.time) return false;         // check for 60 seconds minimum pass duration
+        if (aos.az == los.az) return false;                  // check for different aos and los az
+        if (aos.el == mel.el) return false;                  // aos elevation like mel does not make sense
+        if (los.el == mel.el) return false;                  // los elevation like mel does not make sense
         return true;
     }
 
     // calculate progress based on passed time
     float progress() {
         // TODO: prevent division by zero
-        long duration = los - aos;
-        float progress = Clock->getEpoch() - aos;
+        long duration = los.time - aos.time;
+        float progress = Clock->getEpoch() - aos.time;
         return progress / duration;
     }
 
     JsonDocument* getJson() {
         data.clear();
 
-        data["aos"] = aos;
-        data["los"] = los;
-        data["aos_az"] = aos_az;
-        data["aos_el"] = aos_el;
-        data["los_az"] = los_az;
-        data["los_el"] = los_el;
-        data["max_el"] = max_el;
+        data["aos_time"] = aos.time;
+        data["aos_az"] = aos.az;
+        data["aos_el"] = aos.el;
+
+        data["los_time"] = los.time;
+        data["los_az"] = los.az;
+        data["los_el"] = los.el;
+
+        data["mel_time"] = mel.time;
+        data["mel_az"] = mel.az;
+        data["mel_el"] = mel.el;
+
         data["state"] = stateToString();
-        data["cd"] = cd;
         data["time"] = Clock->getEpoch();
+        data["cd"] = cd;
 
         return &data;
     }

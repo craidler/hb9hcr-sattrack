@@ -1,6 +1,6 @@
 function timestamp(id) {
     let d = new Date();
-    let t = document.querySelector('#' + id).value || String(d.getHours()).padStart(2, 0) + String(d.getMinutes()).padStart(2, 0);
+    let t = document.querySelector('#' + id).value.padStart(4, 0) || d.getHours().toString().padStart(2, 0) + d.getMinutes().toString().padStart(2, 0);
     d.setHours(t.substr(0, 2), t.substr(2, 2), 0, 0);
     return d.getTime();
 }
@@ -19,8 +19,7 @@ function setActuator(data) {
     set('el_deg', data.el_deg.toFixed(2));
     set('az_pos', data.az_pos.toFixed(2));
     set('el_pos', data.el_pos.toFixed(2));
-    set('time', date.getHours().toString().padStart(2, '0') +
-        date.getMinutes().toString().padStart(2, '0'));
+    set('time', date.getHours().toString().padStart(2, '0') + date.getMinutes().toString().padStart(2, '0'));
 }
 
 function setState(s) {
@@ -35,27 +34,29 @@ function setState(s) {
 
 function setTracker(data) {
     const date = new Date(data.time * 1000);
-    // TODO: set aos & los
+    const aos = new Date(data.aos * 1000);
+    const los = new Date(data.los * 1000);
+    value('aos_time', aos.getHours().toString().padStart(2, '0') + aos.getMinutes().toString().padStart(2, '0'));
     value('aos_az', data.aos_az);
     value('aos_el', data.aos_el);
+    value('los_time', los.getHours().toString().padStart(2, '0') + los.getMinutes().toString().padStart(2, '0'));
     value('los_az', data.los_az);
     value('los_el', data.los_el);
-    value('max_el', data.max_el);
+    value('mel_el', data.mel_el);
     set('state', setState(data.state));
+    set('time', date.getHours().toString().padStart(2, '0') + date.getMinutes().toString().padStart(2, '0'));
     set('cd', data.cd);
-    set('time', date.getHours().toString().padStart(2, '0') +
-        date.getMinutes().toString().padStart(2, '0'));
 }
 
-document.querySelectorAll('button[name="move"]').forEach(el => {
+document.querySelectorAll('button[name="mve"]').forEach(el => {
     el.addEventListener('click', () => {
         fetch('/actuator', {
             method: 'POST',
             headers: { 'Content-type': 'application/json' },
             body: JSON.stringify({
-                'value': el.value,
-                'mode': el.dataset.mode,
                 'axis': el.dataset.axis,
+                'mode': el.dataset.mode,
+                'value': el.value,
             }),
         }).then(r => {
             if (!r.ok) throw new Error('actuator POST failed');
@@ -66,14 +67,11 @@ document.querySelectorAll('button[name="move"]').forEach(el => {
     });
 });
 
-document.querySelectorAll('button[name="reset"]').forEach(el => {
+document.querySelectorAll('button[name="rst"]').forEach(el => {
     el.addEventListener('click', () => {
-        fetch('/actuator', {
+        fetch('/actuator/' + el.dataset.axis, {
             method: 'DELETE',
             headers: { 'Content-type': 'application/json' },
-            body: JSON.stringify({
-                'axis': el.dataset.axis,
-            }),
         }).then(r => {
             if (!r.ok) throw new Error('actuator DELETE failed');
             return r.json();
@@ -112,13 +110,13 @@ document.querySelector('button[name="set"]').addEventListener('click', () => {
         method: 'PUT',
         headers: { 'Content-type': 'application/json' },
         body: JSON.stringify({
-            'aos': timestamp('aos'),
-            'los': timestamp('los'),
+            'aos_time': timestamp('aos_time'),
             'aos_az': parseInt(document.querySelector('#aos_az').value) || 0,
             'aos_el': parseInt(document.querySelector('#aos_el').value) || 0,
+            'los_time': timestamp('los_time'),
             'los_az': parseInt(document.querySelector('#los_az').value) || 0,
             'los_el': parseInt(document.querySelector('#los_el').value) || 0,
-            'max_el': parseInt(document.querySelector('#max_el').value) || 0,
+            'mel_el': parseInt(document.querySelector('#mel_el').value) || 0,
         }),
     }).then(r => {
         if (!r.ok) throw new Error('tracker PUT failed');

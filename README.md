@@ -29,7 +29,10 @@ The device features a webserver which serves a command page over WiFi. Clicking 
 tbd
 
 ## Antenna
-Home brew, based on AI results and online Yagi calculator, fine tuned with an [NanoVNA H4](https://nanovna.com). My requirements are: Leight-weigth, non-conductive Boom, equal Boom length, Coil Design Beta Match.
+
+<img src="img/antenna.png" alt="antenna" width="100%">
+
+Home brew, based on AI results and online Yagi calculator, fine tuned with an [NanoVNA H4](https://nanovna.com), I try to build my own. My requirements are: Leight-weigth, non-conductive Boom, equal Boom length, Coil Design Beta Match.
 
 <a name="antenna-70cm"></a>
 ### Yagi 7-Element 70cm Band &#x1F4E1;

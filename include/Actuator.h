@@ -2,11 +2,11 @@
 #define __HB9HCR_ACTUATOR__
 
 #include <AsyncJson.h>
+#include <ESP32Time.h>
 #include <ESPAsyncWebServer.h>
 #include <SCServo.h>
 #include <string.h>
 
-#include "Clock.h"
 #include "Sensor.h"
 #include "Servo.h"
 
@@ -27,7 +27,6 @@ class HB9HCR_Actuator {
     HB9HCR_Sensor* Sensor = nullptr;
     HB9HCR_Servo Azimuth = HB9HCR_Servo(1);
     HB9HCR_Servo Elevation = HB9HCR_Servo(2);
-    HB9HCR_Clock* Clock;
     USBCDC* Input = nullptr;
 
     void begin() {
@@ -50,48 +49,49 @@ class HB9HCR_Actuator {
             Serial.print("actuator: direct control webhandlers ");
 
             // state
-            Server->on("/actuator", HTTP_GET, [this](AsyncWebServerRequest* request) {
+            Server->on("/actuator/state", HTTP_GET, [this](AsyncWebServerRequest* request) {
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
 
-            // normalize
-            Server->on("/actuator/az", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
-                Azimuth.reset();
+            // calibrate
+            AsyncCallbackJsonWebHandler* handleCalibrate = new AsyncCallbackJsonWebHandler("/actuator/calibrate", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+                JsonObject data = json.as<JsonObject>();
+                calibrate();
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
 
-            Server->on("/actuator/el", HTTP_DELETE, [this](AsyncWebServerRequest* request) {
-                Elevation.reset();
+            handleCalibrate->setMethod(HTTP_POST);
+            Server->addHandler(handleCalibrate);
+
+            // reset
+            AsyncCallbackJsonWebHandler* handleReset = new AsyncCallbackJsonWebHandler("/actuator/reset", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+                JsonObject data = json.as<JsonObject>();
+                HB9HCR_Servo* Axis = (data["axis"].as<String>().equalsIgnoreCase("az")) ? &Azimuth : &Elevation;
+                Axis->reset();
+
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
+
+            handleReset->setMethod(HTTP_POST);
+            Server->addHandler(handleReset);
 
             // move
-            AsyncCallbackJsonWebHandler* moveHandler = new AsyncCallbackJsonWebHandler("/actuator", [this](AsyncWebServerRequest* request, JsonVariant& json) {
-                data = json.as<JsonObject>();
-
-                if (data.isNull()) {
-                    data.clear();
-                    data["error"] = "invalid json";
-                    serializeJson(data, response);
-                    request->send(400, "application/json", response);
-                    return;
-                }
-
-                float value = data["value"].as<float>();
-                String mode = data["mode"].as<String>();
-                String axis = data["axis"].as<String>();
-
-                HB9HCR_Servo* Axis = ("az" == axis.c_str()) ? &Azimuth : &Elevation;
-                ("a" == mode.c_str()) ? Axis->to(value) : Axis->move(value * HB9HCR_Servo::RESOLUTION);
+            AsyncCallbackJsonWebHandler* handleMove = new AsyncCallbackJsonWebHandler("/actuator/move", [this](AsyncWebServerRequest* request, JsonVariant& json) {
+                JsonObject data = json.as<JsonObject>();
+                HB9HCR_Servo* Axis = (data["axis"].as<String>().equalsIgnoreCase("az")) ? &Azimuth : &Elevation;
+                data["mode"].as<String>().equalsIgnoreCase("a")
+                    ? Axis->to(data["value"].as<short>())
+                    : Axis->move(data["value"].as<float>() * HB9HCR_Servo::RESOLUTION);
 
                 serializeJson(*getJson(), response);
                 request->send(200, "application/json", response);
             });
 
-            Server->addHandler(moveHandler);
+            handleMove->setMethod(HTTP_POST);
+            Server->addHandler(handleMove);
 
             Serial.println("attached");
         }
@@ -213,7 +213,6 @@ class HB9HCR_Actuator {
         data["el_deg"] = Elevation.degree;
         data["az_pos"] = Azimuth.position;
         data["el_pos"] = Elevation.position;
-        data["time"] = Clock->getEpoch();
 
         return &data;
     }

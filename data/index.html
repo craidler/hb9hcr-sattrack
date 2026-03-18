@@ -17,73 +17,75 @@
             <span>HCR</span>
         </div>
         <h2>TRACKER</h2>
-        <div id="tracker" class="grid mt">
+        <div id="tracker" class="grid mt idle">
             <span>AOS AZ&deg;</span>
             <span>AOS EL&deg;</span>
-            <span><strong>MAX EL&deg;</strong></span>
-            <span>LOS AZ&deg;</span>
+            <span>MAX EL&deg;</span>
             <span>LOS EL&deg;</span>
+            <span>LOS AZ&deg;</span>
             <input id="aos_az" type="text" value="0" autocomplete="off">
             <input id="aos_el" type="text" value="0" autocomplete="off">
             <input id="mel_el" type="text" value="0" autocomplete="off">
-            <input id="los_az" type="text" value="0" autocomplete="off">
             <input id="los_el" type="text" value="0" autocomplete="off">
-            <input id="aos_time" type="text" pattern="[0-9]{4}" value="0000" autocomplete="off">
+            <input id="los_az" type="text" value="0" autocomplete="off">
+            <input id="aos_time" type="text" pattern="[0-9]{6}" value="000000" autocomplete="off">
             <span>AOS</span>
-            <span id="time">----</span>
+            <span id="cur_time">000000</span>
             <span>LOS</span>
-            <input id="los_time" type="text" pattern="[0-9]{4}" value="0000" autocomplete="off">
+            <input id="los_time" type="text" pattern="[0-9]{6}" value="000000" autocomplete="off">
             <span id="state">IDLE</span>
             <button name="set">SET</button>
-            <button name="clr">RST</button>
-            <button name="exe">EXE</button>
+            <button name="reset">RST</button>
+            <button name="execute">EXE</button>
             <span>T-<span id="cd">0</span><span>s</span></span>
         </div>
         <h2>ACTUATOR</h2>
-        <div class="grid mt">
-            <span>ABS</span>
-            <span>
-                <span id="az_pos">0</span>
-            </span>
-            <span><strong>AZIMUTH</strong></span>
-            <span>
-                <span id="az_deg">0</span><span>&deg;</span>
-            </span>
-            <span>REL</span>
-            <button name="mve" data-axis="az" data-mode="a" value="270" class="span">270&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="315">315&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="0">0&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="45">45&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="90" class="span">90&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="225">225&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="180">180&deg;</button>
-            <button name="mve" data-axis="az" data-mode="a" value="135">135&deg;</button>
-            <button name="mve" data-axis="az" data-mode="r" value="-10">-10&deg;</button>
-            <button name="mve" data-axis="az" data-mode="r" value="-1">-1&deg;</button>
-            <button name="rst" data-axis="az">RST</button>
-            <button name="mve" data-axis="az" data-mode="r" value="+1">+1&deg;</button>
-            <button name="mve" data-axis="az" data-mode="r" value="+10">+10&deg;</button>
-        </div>
-        <div class="grid mt">
-            <span>ABS</span>
-            <span>
-                <span id="el_pos">0</span>
-            </span>
-            <span><strong>ELEVATION</strong></span>
-            <span>
-                <span id="el_deg">0</span><span>&deg;</span>
-            </span>
-            <span>REL</span>
-            <button name="mve" data-axis="el" data-mode="a" value="0">0&deg;</button>
-            <button name="mve" data-axis="el" data-mode="a" value="30">30&deg;</button>
-            <button name="mve" data-axis="el" data-mode="a" value="45">45&deg;</button>
-            <button name="mve" data-axis="el" data-mode="a" value="60">60&deg;</button>
-            <button name="mve" data-axis="el" data-mode="a" value="90">90&deg;</button>
-            <button name="mve" data-axis="el" data-mode="r" value="-10">-10&deg;</button>
-            <button name="mve" data-axis="el" data-mode="r" value="-1">-1&deg;</button>
-            <button name="rst" data-axis="el">RST</button>
-            <button name="mve" data-axis="el" data-mode="r" value="+1">+1&deg;</button>
-            <button name="mve" data-axis="el" data-mode="r" value="+10">+10&deg;</button>
+        <div id="actuator">
+            <div class="grid mt">
+                <span>ABS</span>
+                <span>
+                    <span id="az_pos">0</span>
+                </span>
+                <button name="calibrate" data-axis="az"><strong>AZIMUTH</strong></button>
+                <span>
+                    <span id="az_deg">0</span><span>&deg;</span>
+                </span>
+                <span>REL</span>
+                <button name="move" data-axis="az" data-mode="a" value="270" class="span">270&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="315">315&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="0">0&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="45">45&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="90" class="span">90&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="225">225&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="180">180&deg;</button>
+                <button name="move" data-axis="az" data-mode="a" value="135">135&deg;</button>
+                <button name="move" data-axis="az" data-mode="r" value="-10">-10&deg;</button>
+                <button name="move" data-axis="az" data-mode="r" value="-1">-1&deg;</button>
+                <button name="reset" data-axis="az">RST</button>
+                <button name="move" data-axis="az" data-mode="r" value="+1">+1&deg;</button>
+                <button name="move" data-axis="az" data-mode="r" value="+10">+10&deg;</button>
+            </div>
+            <div class="grid mt">
+                <span>ABS</span>
+                <span>
+                    <span id="el_pos">0</span>
+                </span>
+                <button name="calibrate" data-axis="el"><strong>ELEVATION</strong></button>
+                <span>
+                    <span id="el_deg">0</span><span>&deg;</span>
+                </span>
+                <span>REL</span>
+                <button name="move" data-axis="el" data-mode="a" value="0">0&deg;</button>
+                <button name="move" data-axis="el" data-mode="a" value="30">30&deg;</button>
+                <button name="move" data-axis="el" data-mode="a" value="45">45&deg;</button>
+                <button name="move" data-axis="el" data-mode="a" value="60">60&deg;</button>
+                <button name="move" data-axis="el" data-mode="a" value="90">90&deg;</button>
+                <button name="move" data-axis="el" data-mode="r" value="-10">-10&deg;</button>
+                <button name="move" data-axis="el" data-mode="r" value="-1">-1&deg;</button>
+                <button name="reset" data-axis="el">RST</button>
+                <button name="move" data-axis="el" data-mode="r" value="+1">+1&deg;</button>
+                <button name="move" data-axis="el" data-mode="r" value="+10">+10&deg;</button>
+            </div>
         </div>
         <p>2026 HB9HCR Sattrack</p>
         <p id="log" class="alert">-</p>

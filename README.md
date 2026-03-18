@@ -1,10 +1,10 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
 
-With Prototype Mk2, I managed to control both servos in different modes. Azimuth is in relative (3), elevation in absolute (0) mode. Both axis can be "homed" at any given time. Elevation currently takes initial angle from the frame IMU and translates this to an offset of the center position (2023). Azimuth takes the "short path".
+Prototype mk2 is capable of calibration and interpolating a satellite pass through the visible sky.
 
 <img src="./img/prototype-mk2.gif" width="100%">
 
-The device features a webserver which serves a command page over WiFi. Clicking the buttons commands the axis servos to move to the chosen position or in increments of positive/negative 1 or 10 degrees.
+The device features a webserver which serves a command page over WiFi. Clicking the buttons commands the axis servos to move to the chosen position or in increments of &plusmn;1° or &plusmn;10°. `RST` will set the respective axis offsets to 0. Tapping the axis itself, `AZIMUTH` and `ELEVATION`, triggers a calibration routing. Currently only `ELEVATION` will level itself to 0°. The actuator section is disabled if the user parametrizes a satellite pass in the top tracker section. From left to right the following parameters have to be keyed in, time offset is the current day plus 6-digit military time. Control input by `SET`, ` RST` and `EXE` buttons.
 
 <img src="./img/ui.png" alt="ui" width="100%">
 
@@ -18,13 +18,12 @@ The device features a webserver which serves a command page over WiFi. Clicking 
 - [Yagi 3-Element 2m Band](#antenna-2m) (home brew)
 
 ### Sensor
-- I2C BMM350 Triple-Axis Magnetometer https://www.dfrobot.com/product-2874.html
+- I2C BMM350 Triple-Axis Magnetometer https://www.dfrobot.com/product-2874.html (not implemented due to magnetic interference)
 - I2C BMI160 6-Axis IMU https://www.dfrobot.com/product-1716.html
-- I2C Digital Wattmeter https://www.dfrobot.com/product-1827.html
+- I2C Digital Wattmeter https://www.dfrobot.com/product-1827.html (not implemented yet)
 
 ### Other
-- DFRobot SD2405 RTC
-- I2C HUB https://www.dfrobot.com/product-2179.html
+- I2C HUB https://www.dfrobot.com/product-2179.html (not used at the moment)
 
 ## Mechanic
 tbd
@@ -35,7 +34,6 @@ Home brew, based on AI results and online Yagi calculator, fine tuned with an [N
 <a name="antenna-70cm"></a>
 ### Yagi 7-Element 70cm Band &#x1F4E1;
 
-![Yagi 70cm Band Radiator](./img//yagi-radiator-70cm.jpeg)
 This is what my rapid prototyping brought out of a radiator. I duct-taped the aluminum tubes (50mm) just a bit so they fit into the acrylic tube (105mm) neatly and the result is a 5mm gap. Then I drilled 3.5mm holes 15mm apart and tapped M4 threads. For final assembly I will use conductive gel for the stainless steel screws through a lock-washer (to bite into the acryl), washer, two ring terminals and another washer on top. For the beta match I used a 100mm 1.5mm<sup>2</sup> wire and 2 windings around the aluminum tube.
 
 #### Dimensions

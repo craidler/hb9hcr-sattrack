@@ -93,9 +93,6 @@ Director 5 (D5)	291 mm	    960 mm	        225 mm
 - [ ] 1x PL Female
 
 
-
-
-
 dont forget: 
 ```
 upload_protocol = esptool

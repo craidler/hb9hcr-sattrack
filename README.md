@@ -7,7 +7,7 @@ The device features a webserver which serves a command page over WiFi.
 
 <img src="./img/ui-header.png" alt="ui" width="100%">
 
-The actuator section is disabled if the user parametrizes a satellite pass in the top tracker section. From left to right the following parameters have to be keyed in, time offset is the current day plus 6-digit military time. Control input by `SET`, ` RST` and `EXE` buttons.
+The actuator section is disabled if the user parametrizes a satellite pass in the top tracker section. From left to right the following parameters have to be keyed in, time offset is the current day plus 6-digit military time. Control input by `SET`, `RST` and `EXE` buttons.
 
 <img src="./img/ui-tracker.png" alt="ui" width="100%">
 

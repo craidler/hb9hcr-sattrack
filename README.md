@@ -14,6 +14,7 @@ The actuator section is disabled if the user parametrizes a satellite pass in th
 Clicking the buttons commands the axis servos to move to the chosen position or in increments of &plusmn;1° or &plusmn;10°. `RST` will set the respective axis offsets to 0. Tapping the axis itself, `AZIMUTH` and `ELEVATION`, triggers a calibration routing. 
 
 <img src="./img/ui-actuator.png" alt="ui" width="100%">
+
 Currently only `ELEVATION` will level itself to 0°.
 
 ### Actuator

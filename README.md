@@ -1,12 +1,20 @@
 # HB9HCR Sattrack &#x1F6F0;&#xFE0F;
-
 Prototype mk2 is capable of calibration and interpolating a satellite pass through the visible sky.
 
 <img src="./img/prototype-mk2.gif" width="100%">
 
-The device features a webserver which serves a command page over WiFi. Clicking the buttons commands the axis servos to move to the chosen position or in increments of &plusmn;1° or &plusmn;10°. `RST` will set the respective axis offsets to 0. Tapping the axis itself, `AZIMUTH` and `ELEVATION`, triggers a calibration routing. Currently only `ELEVATION` will level itself to 0°. The actuator section is disabled if the user parametrizes a satellite pass in the top tracker section. From left to right the following parameters have to be keyed in, time offset is the current day plus 6-digit military time. Control input by `SET`, ` RST` and `EXE` buttons.
+The device features a webserver which serves a command page over WiFi.
 
-<img src="./img/ui.png" alt="ui" width="100%">
+<img src="./img/ui-header.png" alt="ui" width="100%">
+
+The actuator section is disabled if the user parametrizes a satellite pass in the top tracker section. From left to right the following parameters have to be keyed in, time offset is the current day plus 6-digit military time. Control input by `SET`, ` RST` and `EXE` buttons.
+
+<img src="./img/ui-tracker.png" alt="ui" width="100%">
+
+Clicking the buttons commands the axis servos to move to the chosen position or in increments of &plusmn;1° or &plusmn;10°. `RST` will set the respective axis offsets to 0. Tapping the axis itself, `AZIMUTH` and `ELEVATION`, triggers a calibration routing. 
+
+<img src="./img/ui-actuator.png" alt="ui" width="100%">
+Currently only `ELEVATION` will level itself to 0°.
 
 ### Actuator
 - UART Servo Driver Board https://www.dfrobot.com/product-3002.html

@@ -100,7 +100,7 @@ button.span {
 }
 
 .alert {
-    color: #ff0 !important;
+    color: #ffdc00 !important;
     text-transform: lowercase;
 }
 
@@ -109,7 +109,7 @@ button.span {
         border-color: transparent;
     }
     to {
-        border-color: #ff0;
+        border-color: #ffdc00;
     }
 }
 

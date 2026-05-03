@@ -81,9 +81,9 @@ Director 1 (D1)	  982mm	    +414mm    828mm
 ```
 
 #### Hardware
-- 8x 8x1mm Aluminum Tubes (+20x Cap)
-- 2x M25x1000mm PVC Tubes (+4x Cap)
-- 10x M25 PVC Clamps
+- 8x 8x1000mm Aluminum Tube 1mm (+20x Cap)
+- 2x M25x1000mm PVC Tube (+4x Cap)
+- 10x M25 PVC Clamp
 - 10x MidiOTO Fuse Holder
 
 ### Platform.io notes
